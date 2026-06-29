@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+numpy
+scipy
+music21
+python-multipart
