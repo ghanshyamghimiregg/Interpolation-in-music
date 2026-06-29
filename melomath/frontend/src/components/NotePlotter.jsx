@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'react-toastify'
@@ -30,7 +30,7 @@ function freqToNote(freq) {
  * @param {Function} props.loadPreset - Function to load a preset
  * @param {Function} props.onMidiUpload - Callback for MIDI upload
  */
-function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload }) {
+function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload, useFrontendMode = true }) {
   const [selectedPreset, setSelectedPreset] = useState('')
 
   const handleClick = (e) => {
@@ -43,15 +43,20 @@ function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload }) {
     const x = ((e.clientX - rect.left) / rect.width) * 4
     const y = 2000 - ((e.clientY - rect.top) / rect.height) * 1900
 
-    setPoints([...points, { x: Math.max(0, Math.min(4, x)), y: Math.max(100, Math.min(2000, y)) }])
+    const newPoint = { x: Math.max(0, Math.min(4, x)), y: Math.max(100, Math.min(2000, y)) }
+    setPoints([...points, newPoint])
+    toast.success('Point added!')
   }
 
   const handleDelete = (index) => {
-    setPoints(points.filter((_, i) => i !== index))
+    const newPoints = points.filter((_, i) => i !== index)
+    setPoints(newPoints)
+    toast.info('Point removed')
   }
 
   const handleClear = () => {
     setPoints([])
+    toast.success('All points cleared')
   }
 
   const onDrop = useCallback(async (acceptedFiles) => {
@@ -67,8 +72,7 @@ function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload }) {
         body: formData
       })
       const data = await response.json()
-      onMidiUpload(data.points)
-      toast.success(`Loaded: ${data.track_name}`)
+      onMidiUpload(data.points, data.trackName)
     } catch (error) {
       toast.error('Failed to parse MIDI file')
     }
@@ -80,42 +84,55 @@ function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload }) {
   })
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-semibold text-gray-400">Note Plotter</h3>
-        <span className="text-sm text-gray-500">{points.length} / 12 points</span>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <svg 
+            className="w-4 h-4 text-gray-400" 
+            viewBox="0 0 24 24" 
+            fill="currentColor" 
+            aria-hidden="true"
+          >
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 16H5V5h14v14zM7 12h2v5H7zm4-3h2v8h-2zm4-3h2v11h-2z"/>
+          </svg>
+          <h3 className="text-sm font-semibold text-gray-300">Note Plotter</h3>
+        </div>
+        <span className="text-sm text-gray-500 font-medium bg-gray-800 px-3 py-1 rounded-full">
+          {points.length}/12
+        </span>
       </div>
 
       <div
         onClick={handleClick}
-        className="bg-[#0f0f0f] rounded-lg border border-[#2a2a2a] cursor-crosshair"
+        className="bg-gray-900/50 rounded-xl border border-gray-800 cursor-crosshair overflow-hidden transition-all duration-200 hover:border-gray-700"
       >
-        <ResponsiveContainer width="100%" height={250}>
-          <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 40 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+        <ResponsiveContainer width="100%" height={220}>
+          <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 40 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis
               type="number"
               dataKey="x"
               domain={[0, 4]}
-              stroke="#666"
-              tick={{ fill: '#999' }}
-              label={{ value: 'Time (s)', position: 'bottom', fill: '#999' }}
+              stroke="#9CA3AF"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              label={{ value: 'Time (s)', position: 'bottom', fill: '#9CA3AF', fontSize: 12 }}
             />
             <YAxis
               type="number"
               dataKey="y"
               domain={[100, 2000]}
-              stroke="#666"
-              tick={{ fill: '#999' }}
-              label={{ value: 'Frequency (Hz)', angle: -90, position: 'left', fill: '#999' }}
+              stroke="#9CA3AF"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              label={{ value: 'Freq (Hz)', angle: -90, position: 'left', fill: '#9CA3AF', fontSize: 12 }}
               tickFormatter={(value) => {
                 const note = freqToNote(value)
                 return `${value.toFixed(0)}\n${note}`
               }}
-              width={80}
+              width={70}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+              contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+              itemStyle={{ color: '#fff' }}
               formatter={(value, name) => {
                 if (name === 'y') {
                   return [`${value.toFixed(1)} Hz (${freqToNote(value)})`, 'Frequency']
@@ -123,43 +140,72 @@ function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload }) {
                 return [value.toFixed(2), name === 'x' ? 'Time' : name]
               }}
             />
-            <Scatter data={points} fill="#ffffff" strokeWidth={2} stroke="#ffffff" />
+            <Scatter 
+              data={points} 
+              fill="#8B5CF6" 
+              stroke="#A78BFA" 
+              strokeWidth={2}
+            />
           </ScatterChart>
         </ResponsiveContainer>
+        <div className="px-4 py-2 bg-gray-900/80 border-t border-gray-800">
+          <p className="text-xs text-gray-500 text-center">
+            Click anywhere on the plot to add a point
+          </p>
+        </div>
       </div>
 
       {points.length > 0 && (
-        <div className="mt-3 space-y-2">
+        <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
           {points.map((point, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-2 bg-[#0f0f0f] rounded border border-[#2a2a2a]"
+              className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800 transition-all duration-200 hover:border-gray-700"
             >
-              <span className="text-sm">
-                {freqToNote(point.y)} • {point.x.toFixed(2)}s • {point.y.toFixed(1)}Hz
-              </span>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                <span className="text-sm text-gray-300">
+                  {freqToNote(point.y)} • {point.x.toFixed(2)}s • {point.y.toFixed(0)}Hz
+                </span>
+              </div>
               <button
                 onClick={() => handleDelete(index)}
-                className="text-red-400 hover:text-red-300 text-sm"
+                className="text-gray-500 hover:text-red-400 transition-colors duration-200 text-sm"
               >
-                Delete
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                </svg>
               </button>
             </div>
           ))}
         </div>
       )}
 
-      <div className="mt-4 flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <button
           onClick={handleClear}
-          className="flex-1 px-4 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg hover:border-gray-600 transition-all duration-300"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition-all duration-200"
         >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </svg>
           Clear All
+        </button>
+        <button
+          onClick={() => {
+            setSelectedPreset('')
+          }}
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 border border-purple-500 rounded-lg text-sm font-medium transition-all duration-200"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          Load Preset
         </button>
       </div>
 
-      <div className="mt-4">
-        <label className="text-sm font-semibold text-gray-400 mb-2 block">Load Preset</label>
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-gray-400">Choose a preset:</label>
         <select
           value={selectedPreset}
           onChange={(e) => {
@@ -169,7 +215,7 @@ function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload }) {
               setSelectedPreset(e.target.value)
             }
           }}
-          className="w-full px-4 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg focus:outline-none focus:border-gray-500"
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-200"
         >
           <option value="">Select a preset...</option>
           {presets.map(preset => (
@@ -180,21 +226,39 @@ function NotePlotter({ points, setPoints, presets, loadPreset, onMidiUpload }) {
         </select>
       </div>
 
-      <div className="mt-4">
+      {!useFrontendMode && (
         <div
           {...getRootProps()}
-          className={`p-4 border-2 border-dashed rounded-lg text-center cursor-pointer transition-all duration-300 ${
-            isDragActive ? 'border-blue-500 bg-blue-500/10' : 'border-[#2a2a2a] hover:border-gray-600'
+          className={`p-4 border-2 border-dashed rounded-xl text-center cursor-pointer transition-all duration-200 ${
+            isDragActive 
+              ? 'border-purple-500 bg-purple-500/10' 
+              : 'border-gray-700 hover:border-gray-600 hover:bg-gray-900/50'
           }`}
         >
           <input {...getInputProps()} />
-          {isDragActive ? (
-            <p className="text-gray-400">Drop the MIDI file here...</p>
-          ) : (
-            <p className="text-gray-400">Drag & drop a MIDI file here, or click to select</p>
-          )}
+          <div className="flex flex-col items-center gap-2">
+            <svg className="w-8 h-8 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+            </svg>
+            {isDragActive ? (
+              <p className="text-purple-400 text-sm">Drop the MIDI file here...</p>
+            ) : (
+              <p className="text-gray-500 text-sm">Drag &amp; drop a MIDI file here, or click to select</p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {useFrontendMode && (
+        <div className="p-4 bg-gray-900/30 rounded-xl border border-gray-800">
+          <p className="text-sm text-gray-500 flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+            MIDI upload is only available in API mode
+          </p>
+        </div>
+      )}
     </div>
   )
 }

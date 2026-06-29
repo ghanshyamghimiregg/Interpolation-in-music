@@ -1,91 +1,51 @@
 # MeloMath — Musical Interpolation Explorer
 
-A full-stack web application that demonstrates numerical interpolation methods through interactive music synthesis.
+A full-stack web application that demonstrates numerical interpolation methods (Lagrange, Newton's Divided Differences, Cubic Spline) through interactive music synthesis!
 
-## Tech Stack
+## 🌟 Features
 
-### Frontend
-- React 18
-- Vite
-- Tailwind CSS
-- Recharts (visualization)
-- Tone.js (audio synthesis)
+- **Two Modes**: Use standalone frontend (for Vercel-friendly!) or connect to Python backend!
+- **Interactive Plotting**: Click to add musical notes as data points
+- **Visualization**: See all 3 interpolation curves
+- **Audio Playback**: Hear the mathematical difference between methods!
+- **MIDI Support**: Upload MIDI files! (API mode only)
+- **Presets**: Load preset musical patterns!
 
+## 🚀 Deployment on Vercel
+
+### Frontend-Only Mode (Recommended for Vercel)
+Just deploy the frontend directory to Vercel! That's it!
+
+In frontend mode, all interpolation happens in the browser.
+
+### Full-Stack Mode
+1. Deploy frontend and backend separately. See `backend/vercel.json` for backend deployment.
+
+## Local Development
 ### Backend
-- Python 3
-- FastAPI
-- NumPy
-- SciPy
-- Music21
-
-## Installation & Setup
-
-### Backend Setup
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The backend will be available at `http://localhost:8000`
-
-### Frontend Setup
+### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+Then visit http://localhost:5173
 
-The frontend will be available at `http://localhost:5173`
+## Tech Stack
+### Frontend
+- React + Vite
+- Tailwind CSS
+- Recharts
+- Tone.js
 
-## Features
-
-### Interpolation Methods
-- **Lagrange**: Full implementation from scratch
-- **Newton's Divided Differences**: Full implementation with table display
-- **Cubic Spline**: Using SciPy with coefficient extraction
-
-### Interactive Features
-- Click to add musical notes as data points
-- Drag & drop MIDI files
-- Load preset musical patterns (C Major Scale, Twinkle Twinkle, etc.)
-- Listen to interpolated audio
-- Visualize interpolation curves
-- View error metrics (RMSE, smoothness)
-- Explore Runge's phenomenon
-
-## Project Structure
-
-```
-melomath/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── NotePlotter.jsx
-│   │   │   ├── InterpolationChart.jsx
-│   │   │   ├── AudioPlayer.jsx
-│   │   │   ├── ErrorDashboard.jsx
-│   │   │   ├── DDTable.jsx
-│   │   │   └── SplineCoeffTable.jsx
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   └── package.json
-├── backend/
-│   ├── interpolation/
-│   │   ├── __init__.py
-│   │   ├── lagrange.py
-│   │   ├── newton.py
-│   │   └── spline.py
-│   ├── main.py
-│   ├── midi_parser.py
-│   └── requirements.txt
-└── README.md
-```
-
-## License
-
-MIT
+### Backend
+- FastAPI
+- NumPy
+- SciPy
+- Music21

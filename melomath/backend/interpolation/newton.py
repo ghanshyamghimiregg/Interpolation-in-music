@@ -57,15 +57,15 @@ def newton_interpolate(points, x_eval):
         y_eval.append(result)
     
     # Convert table to 2D list for frontend display
-    # Make it triangular with None for missing values
+    # Make it triangular with null for missing values (JSON-friendly)
     display_table = []
     for i in range(n):
         row = []
         for j in range(n):
             if j < len(dd_table) and i < len(dd_table[j]):
-                row.append(dd_table[j][i])
+                row.append(float(dd_table[j][i]))  # Ensure it's a float for JSON
             else:
-                row.append(None)
+                row.append(None)  # JSON can handle null (None in Python becomes null)
         display_table.append(row)
     
     return y_eval, display_table

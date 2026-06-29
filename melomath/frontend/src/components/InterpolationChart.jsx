@@ -64,67 +64,85 @@ function InterpolationChart({ interpolationData, points, activeMethods, isLoadin
 
   if (isLoading) {
     return (
-      <div className="animate-pulse">
-        <div className="h-[400px] bg-[#0f0f0f] rounded-lg"></div>
+      <div className="animate-pulse space-y-4">
+        <div className="h-80 bg-gray-900/50 rounded-xl border border-gray-800"></div>
+        <div className="h-24 bg-gray-900/50 rounded-xl border border-gray-800"></div>
       </div>
     )
   }
 
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-4">Interpolation Curves</h3>
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-          <XAxis
-            dataKey="x"
-            stroke="#666"
-            tick={{ fill: '#999' }}
-            label={{ value: 'Time (s)', position: 'bottom', fill: '#999' }}
-          />
-          <YAxis
-            stroke="#666"
-            tick={{ fill: '#999' }}
-            label={{ value: 'Frequency (Hz)', angle: -90, position: 'left', fill: '#999' }}
-          />
-          <Tooltip
-            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-            formatter={(value, name) => {
-              if (methodNames[name]) {
-                return [`${value.toFixed(1)} Hz (${freqToNote(value)})`, methodNames[name]]
-              }
-              return [value.toFixed(2), name]
-            }}
-          />
-          <Legend wrapperStyle={{ color: '#999' }} />
-          {activeMethods.map(method => (
-            interpolationData[method] && (
-              <Line
-                key={method}
-                type="monotone"
-                dataKey={method}
-                stroke={methodColors[method]}
-                strokeWidth={2}
-                dot={false}
-                name={methodNames[method]}
-              />
-            )
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <svg 
+            className="w-5 h-5 text-purple-400" 
+            viewBox="0 0 24 24" 
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99l1.5 1.5z"/>
+          </svg>
+          Interpolation Curves
+        </h3>
+      </div>
+      <div className="bg-gray-900/30 rounded-xl border border-gray-800 p-4">
+        <ResponsiveContainer width="100%" height={380}>
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis
+              dataKey="x"
+              stroke="#9CA3AF"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              label={{ value: 'Time (s)', position: 'bottom', fill: '#9CA3AF', fontSize: 13 }}
+            />
+            <YAxis
+              stroke="#9CA3AF"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              label={{ value: 'Frequency (Hz)', angle: -90, position: 'left', fill: '#9CA3AF', fontSize: 13 }}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '10px' }}
+              itemStyle={{ color: '#fff' }}
+              formatter={(value, name) => {
+                if (methodNames[name]) {
+                  return [`${value.toFixed(1)} Hz (${freqToNote(value)})`, methodNames[name]]
+                }
+                return [value.toFixed(2), name]
+              }}
+            />
+            <Legend wrapperStyle={{ color: '#9CA3AF' }} />
+            {activeMethods.map(method => (
+              interpolationData[method] && (
+                <Line
+                  key={method}
+                  type="monotone"
+                  dataKey={method}
+                  stroke={methodColors[method]}
+                  strokeWidth={3}
+                  dot={false}
+                  name={methodNames[method]}
+                />
+              )
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       {points.length > 0 && (
-        <div className="mt-4">
-          <h4 className="text-sm font-semibold text-gray-400 mb-2">Control Points</h4>
-          <ResponsiveContainer width="100%" height={100}>
-            <ScatterChart data={points} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis dataKey="x" stroke="#666" tick={{ fill: '#999' }} />
-              <YAxis stroke="#666" tick={{ fill: '#999' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }} />
-              <Scatter data={points} fill="#ffffff" />
-            </ScatterChart>
-          </ResponsiveContainer>
+        <div>
+          <h4 className="text-sm font-semibold text-gray-400 mb-3">Control Points</h4>
+          <div className="bg-gray-900/30 rounded-xl border border-gray-800 p-4">
+            <ResponsiveContainer width="100%" height={100}>
+              <ScatterChart data={points} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="x" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Scatter data={points} fill="#A78BFA" stroke="#8B5CF6" strokeWidth={2} />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
     </div>
