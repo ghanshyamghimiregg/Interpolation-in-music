@@ -87,7 +87,7 @@ export default function DemoApp() {
         placement: 'top',
         body:
           '<p>Lagrange on evenly-spaced points often blows up at the edges — <em>Runge&apos;s phenomenon</em>.</p><p>This panel places the same number of nodes at <strong>Chebyshev spacing</strong> (clustered near the ends) and shows how much the overshoot shrinks, without changing the interpolation method.</p>',
-        if: () => document.querySelector('[data-tour="chebyshev"]') !== null,
+        if: () => typeof document !== 'undefined' && document.querySelector('[data-tour="chebyshev"]') !== null,
       },
       {
         target: '[data-tour="present-mode"]',
@@ -102,13 +102,14 @@ export default function DemoApp() {
         placement: 'top',
         body:
           '<p>Below the demo there are two reference sections:</p><p><strong>How each method works</strong> — mini-plots + formulas side by side. <strong>Applications &amp; Significance</strong> — why this isn&apos;t a classroom toy: sample-rate conversion, DAW automation, synth portamento, generative latent-space morphing, and future extensions.</p><p>The <span class="mono">?</span> button in the corner reopens this walkthrough at any time. Enjoy.</p>',
-        if: () => document.querySelector('[data-tour="reference-section"]') !== null,
+        if: () => typeof document !== 'undefined' && document.querySelector('[data-tour="reference-section"]') !== null,
       },
     ],
     []
   );
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       if (!hasSeenTour()) {
         const t = window.setTimeout(() => setTourActive(true), 350);

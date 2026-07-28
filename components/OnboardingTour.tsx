@@ -148,7 +148,8 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
   const rafRef = useRef<number | null>(null);
 
   const visibleSteps = useMemo(() => {
-    return steps.filter((s) => (s.if ? s.if() : true));
+    const isBrowser = typeof document !== 'undefined';
+    return steps.filter((s) => (s.if ? isBrowser && s.if() : true));
   }, [steps]);
 
   const current = visibleSteps[stepIndex];
@@ -187,6 +188,7 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
   useEffect(() => {
     if (!active) return;
     if (!current) return;
+    if (typeof document === 'undefined') return;
     const el = current.target ? document.querySelector<HTMLElement>(current.target) : null;
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
@@ -197,21 +199,24 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
     onStepChange?.(stepIndex);
   }, [stepIndex, onStepChange]);
 
-  const handleNext = () => {
-    if (stepIndex >= visibleSteps.length - 1) {
-      onFinish();
-    } else {
-      setStepIndex((i) => i + 1);
-    }
-  };
+  const handleNext = useCallback(() => {
+    setStepIndex((idx) => {
+      // Use functional setter so this is stable across renders
+      if (idx >= visibleSteps.length - 1) {
+        onFinish();
+        return idx;
+      }
+      return idx + 1;
+    });
+  }, [visibleSteps.length, onFinish]);
 
-  const handleBack = () => {
-    setStepIndex((i) => Math.max(0, i - 1));
-  };
+  const handleBack = useCallback(() => {
+    setStepIndex((idx) => Math.max(0, idx - 1));
+  }, []);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     onFinish();
-  };
+  }, [onFinish]);
 
   useEffect(() => {
     if (!active) {
@@ -229,7 +234,7 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onFinish();
+        handleSkip();
       } else if (e.key === 'ArrowRight' || e.key === 'Enter') {
         handleNext();
       } else if (e.key === 'ArrowLeft') {
@@ -238,7 +243,7 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, onFinish, stepIndex, visibleSteps.length]);
+  }, [active, handleSkip, handleNext, handleBack]);
 
   if (!active || !current) return null;
 
