@@ -7,7 +7,6 @@ import TransportControls, { playCompare } from './TransportControls';
 import ReferenceSection from './ReferenceSection';
 import ChebyshevComparison from './ChebyshevComparison';
 import ErrorAnalysisPanel from './ErrorAnalysisPanel';
-import PresentModeToggle from './PresentModeToggle';
 import OnboardingTour, {
   hasSeenTour,
   markTourSeen,
@@ -33,7 +32,6 @@ export default function DemoApp() {
   const [method, setMethod] = useState<InterpolationMethod>('cubic-spline');
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState<AppView>('interactive');
-  const [presentMode, setPresentMode] = useState(false);
   const [compareLabel, setCompareLabel] = useState<string | null>(null);
   const [tourActive, setTourActive] = useState(false);
 
@@ -88,13 +86,6 @@ export default function DemoApp() {
         body:
           '<p>Lagrange on evenly-spaced points often blows up at the edges — <em>Runge&apos;s phenomenon</em>.</p><p>This panel places the same number of nodes at <strong>Chebyshev spacing</strong> (clustered near the ends) and shows how much the overshoot shrinks, without changing the interpolation method.</p>',
         if: () => typeof document !== 'undefined' && document.querySelector('[data-tour="chebyshev"]') !== null,
-      },
-      {
-        target: '[data-tour="present-mode"]',
-        title: 'Present mode (for lectures)',
-        placement: 'bottom',
-        body:
-          '<p>Hides all reference prose and zooms the grid + formula panel. Ideal for a projector or lecture demo. Toggle again to bring back the notes.</p>',
       },
       {
         target: '[data-tour="reference-section"]',
@@ -247,9 +238,6 @@ export default function DemoApp() {
             Error analysis
           </button>
         </div>
-        <div data-tour="present-mode">
-          <PresentModeToggle active={presentMode} onToggle={() => setPresentMode((p) => !p)} />
-        </div>
       </div>
 
       {view === 'error' ? (
@@ -294,7 +282,6 @@ export default function DemoApp() {
                   curveFreqs={curveFreqs}
                   minPointsForCurve={2}
                   method={method}
-                  large={presentMode}
                 />
               </div>
 
@@ -326,20 +313,18 @@ export default function DemoApp() {
       )}
 
       <div data-tour="reference-section">
-          {!presentMode && <ReferenceSection />}
+        <ReferenceSection />
       </div>
 
-      {!presentMode && (
-        <button
-          type="button"
-          className="help-btn"
-          onClick={restartTour}
-          aria-label="Start interactive guide"
-          title="Show guide"
-        >
-          ?
-        </button>
-      )}
+      <button
+        type="button"
+        className="help-btn"
+        onClick={restartTour}
+        aria-label="Start interactive guide"
+        title="Show guide"
+      >
+        ?
+      </button>
 
       <OnboardingTour
         steps={tourSteps}

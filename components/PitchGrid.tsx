@@ -27,7 +27,6 @@ interface PitchGridProps {
   curveFreqs: number[];
   minPointsForCurve: number;
   method?: InterpolationMethod;
-  large?: boolean;
 }
 
 export default function PitchGrid({
@@ -37,7 +36,6 @@ export default function PitchGrid({
   curveFreqs,
   minPointsForCurve,
   method = 'cubic-spline',
-  large = false,
 }: PitchGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,12 +48,11 @@ export default function PitchGrid({
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
       const cr = entries[0].contentRect;
-      const aspect = large ? 0.62 : 0.56;
-      setSize({ w: Math.floor(cr.width), h: Math.floor(Math.max(cr.width * aspect, large ? 420 : 280)) });
+      setSize({ w: Math.floor(cr.width), h: Math.floor(Math.max(cr.width * 0.56, 280)) });
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [large]);
+  }, []);
 
   const sorted = [...points].sort((a, b) => a.t - b.t);
   const tMin = sorted.length ? sorted[0].t : TIME_MIN;
@@ -105,7 +102,7 @@ export default function PitchGrid({
     ctx.strokeStyle = '#d4cfc4';
     ctx.lineWidth = 1;
     ctx.fillStyle = '#6b6560';
-    ctx.font = `${large ? 13 : 11}px var(--font-mono)`;
+    ctx.font = '11px var(--font-mono)';
 
     for (let m = MIDI_MIN; m <= MIDI_MAX; m += 3) {
       const { cy } = dataToCanvas(TIME_MIN, m);
@@ -141,7 +138,7 @@ export default function PitchGrid({
 
     if (points.length >= minPointsForCurve && curveTimes.length > 1) {
       ctx.strokeStyle = '#b8432a';
-      ctx.lineWidth = large ? 2.5 : 2;
+      ctx.lineWidth = 2;
       ctx.beginPath();
       for (let i = 0; i < curveTimes.length; i++) {
         const midi = hzToMidi(curveFreqs[i]);
@@ -156,13 +153,13 @@ export default function PitchGrid({
       const { cx, cy } = dataToCanvas(p.t, p.midi);
       ctx.fillStyle = i === dragIndex ? '#b8432a' : '#1a1814';
       ctx.beginPath();
-      ctx.arc(cx, cy, large ? 9 : 7, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#faf8f4';
       ctx.lineWidth = 2;
       ctx.stroke();
     });
-  }, [size, points, curveTimes, curveFreqs, dragIndex, minPointsForCurve, dataToCanvas, sorted.length, tMin, tMax, large]);
+  }, [size, points, curveTimes, curveFreqs, dragIndex, minPointsForCurve, dataToCanvas, sorted.length, tMin, tMax]);
 
   useEffect(() => {
     draw();
