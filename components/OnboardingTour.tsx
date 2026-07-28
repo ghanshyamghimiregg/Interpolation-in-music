@@ -136,7 +136,6 @@ interface OnboardingTourProps {
 
 export default function OnboardingTour({ steps, active, onFinish, onStepChange }: OnboardingTourProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [highlight, setHighlight] = useState<Rect | null>(null);
   const [tipPos, setTipPos] = useState<{
     tTop: number;
     tLeft: number;
@@ -146,6 +145,7 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
   } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
+  const prevTargetRef = useRef<HTMLElement | null>(null);
 
   const visibleSteps = useMemo(() => {
     const isBrowser = typeof document !== 'undefined';
@@ -154,10 +154,26 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
 
   const current = visibleSteps[stepIndex];
 
+  const clearTarget = useCallback(() => {
+    const prev = prevTargetRef.current;
+    if (prev) {
+      prev.classList.remove('tour-target-active');
+      prevTargetRef.current = null;
+    }
+  }, []);
+
+  const applyTarget = useCallback((selector: string | undefined) => {
+    clearTarget();
+    if (!selector || typeof document === 'undefined') return;
+    const el = document.querySelector<HTMLElement>(selector);
+    if (!el) return;
+    el.classList.add('tour-target-active');
+    prevTargetRef.current = el;
+  }, [clearTarget]);
+
   const updatePositions = useCallback(() => {
     if (!current) return;
     const rect = current.target ? getTargetRect(current.target) : null;
-    setHighlight(rect);
     const viewport = { w: window.innerWidth, h: window.innerHeight };
     const tip = tooltipRef.current;
     const tw = tip?.offsetWidth ?? 340;
@@ -167,8 +183,31 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
     setTipPos(pos);
   }, [current]);
 
+  // Apply target class (elevates element above overlay) when step changes
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      clearTarget();
+      return;
+    }
+    applyTarget(current?.target);
+    return () => {
+      // Will be cleaned up either when step changes or on unmount
+    };
+  }, [active, current?.target, applyTarget, clearTarget]);
+
+  // Cleanup on unmount / when tour becomes inactive
+  useEffect(() => {
+    return () => {
+      clearTarget();
+      if (rafRef.current) clearTimeout(rafRef.current);
+    };
+  }, [clearTarget]);
+
+  useEffect(() => {
+    if (!active) {
+      if (rafRef.current) clearTimeout(rafRef.current);
+      return;
+    }
     const tick = () => {
       updatePositions();
       rafRef.current = window.setTimeout(tick, 120) as unknown as number;
@@ -191,7 +230,7 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
     if (typeof document === 'undefined') return;
     const el = current.target ? document.querySelector<HTMLElement>(current.target) : null;
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
     }
   }, [stepIndex, active, current]);
 
@@ -201,7 +240,6 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
 
   const handleNext = useCallback(() => {
     setStepIndex((idx) => {
-      // Use functional setter so this is stable across renders
       if (idx >= visibleSteps.length - 1) {
         onFinish();
         return idx;
@@ -221,14 +259,14 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
   useEffect(() => {
     if (!active) {
       setStepIndex(0);
-      setHighlight(null);
       setTipPos(null);
+      clearTarget();
       return;
     }
     if (stepIndex >= visibleSteps.length) {
       setStepIndex(0);
     }
-  }, [active, visibleSteps.length, stepIndex]);
+  }, [active, visibleSteps.length, stepIndex, clearTarget]);
 
   useEffect(() => {
     if (!active) return;
@@ -253,17 +291,6 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
 
   return (
     <div className="tour-overlay" aria-modal="true" role="dialog" aria-label="Interactive tour">
-      {highlight && (
-        <div
-          className="tour-highlight"
-          style={{
-            top: `${highlight.top - 4}px`,
-            left: `${highlight.left - 4}px`,
-            width: `${highlight.width + 8}px`,
-            height: `${highlight.height + 8}px`,
-          }}
-        />
-      )}
       <div
         ref={tooltipRef}
         className="tour-tooltip"
