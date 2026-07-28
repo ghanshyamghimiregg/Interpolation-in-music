@@ -841,6 +841,67 @@ main {
   padding-top: 0;
 }
 
+/* --- Instrument picker --- */
+.instrument-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper-dark);
+  margin-bottom: 0.25rem;
+}
+
+.instrument-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-right: 0.25rem;
+}
+
+.instrument-chip {
+  appearance: none;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+  line-height: 1;
+}
+
+.instrument-chip:hover {
+  border-color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.instrument-chip.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink), 0 4px 12px -6px rgba(26, 24, 20, 0.4);
+}
+
+@media (max-width: 520px) {
+  .instrument-label {
+    display: block;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+  .instrument-chip {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.55rem;
+  }
+}
+
 /* --- Onboarding Tour --- */
 .tour-overlay {
   position: fixed;

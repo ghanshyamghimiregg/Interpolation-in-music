@@ -1,6 +1,6 @@
 'use client';
 
-import { exportWav, playCompare, type CompareSegment } from '@/lib/audio';
+import { exportWav, type CompareSegment, type InstrumentId } from '@/lib/audio';
 import type { ControlPoint } from '@/lib/interpolation';
 
 interface TransportControlsProps {
@@ -10,6 +10,7 @@ interface TransportControlsProps {
   playing: boolean;
   compareLabel: string | null;
   compareSegments: CompareSegment[];
+  instrument: InstrumentId;
   onPlayGlide: () => void;
   onPlayStaccato: () => void;
   onStop: () => void;
@@ -39,6 +40,7 @@ export default function TransportControls({
   playing,
   compareLabel,
   compareSegments,
+  instrument,
   onPlayGlide,
   onPlayStaccato,
   onStop,
@@ -48,7 +50,7 @@ export default function TransportControls({
   const canCompare = compareSegments.length >= 2 && points.length >= 2;
 
   const handleExport = () => {
-    const blob = exportWav(curveTimes, curveFreqs);
+    const blob = exportWav(curveTimes, curveFreqs, 44100, instrument);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -87,4 +89,3 @@ export default function TransportControls({
   );
 }
 
-export { playCompare };

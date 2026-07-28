@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import PitchGrid from './PitchGrid';
 import MathPanel from './MathPanel';
-import TransportControls, { playCompare } from './TransportControls';
+import TransportControls from './TransportControls';
 import ReferenceSection from './ReferenceSection';
 import ChebyshevComparison from './ChebyshevComparison';
 import ErrorAnalysisPanel from './ErrorAnalysisPanel';
@@ -15,7 +15,14 @@ import OnboardingTour, {
 } from './OnboardingTour';
 import { PRESETS } from '@/lib/presets';
 import { METHODS } from '@/lib/formulas';
-import { playGlide, playStaccato, stopAll } from '@/lib/audio';
+import {
+  INSTRUMENTS,
+  playCompare,
+  playGlide,
+  playStaccato,
+  stopAll,
+  type InstrumentId,
+} from '@/lib/audio';
 import {
   buildEvalGrid,
   detectRungeOvershoot,
@@ -30,6 +37,7 @@ type AppView = 'interactive' | 'error';
 export default function DemoApp() {
   const [points, setPoints] = useState<ControlPoint[]>(PRESETS[2].points);
   const [method, setMethod] = useState<InterpolationMethod>('cubic-spline');
+  const [instrument, setInstrument] = useState<InstrumentId>('piano');
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState<AppView>('interactive');
   const [compareLabel, setCompareLabel] = useState<string | null>(null);
@@ -57,6 +65,13 @@ export default function DemoApp() {
         placement: 'bottom',
         body:
           '<p>Five different algorithms, all building a curve through the same notes:</p><p><span class="mono">Linear</span> is simple but jagged. <span class="mono">Lagrange</span> is a single smooth polynomial (but watch for Runge oscillation). <span class="mono">Newton DD</span> / <span class="mono">Newton FD</span> show how the same polynomial is built from a difference table. <span class="mono">Spline</span> gives the most natural musical glides.</p>',
+      },
+      {
+        target: '[data-tour="instrument"]',
+        title: 'Pick your instrument',
+        placement: 'bottom',
+        body:
+          '<p>The math is the same — the timbre changes everything. <span class="mono">Piano</span> has crisp hammer attacks. Bowed/breathy instruments (<span class="mono">Violin</span>, <span class="mono">Flute</span>, <span class="mono">Sax</span>, <span class="mono">Clarinet</span>) make the smoothness of Spline interpolation audible. <span class="mono">Guitar</span> has a strong 2nd harmonic and pick noise. All instruments share one audio engine — only the partial stack, envelope, vibrato, and noise change.</p>',
       },
       {
         target: '[data-tour="pitch-grid"]',
@@ -164,16 +179,17 @@ export default function DemoApp() {
     await playGlide({
       times: curveTimes,
       freqs: curveFreqs,
+      instrument,
       onEnd: () => setPlaying(false),
     });
-  }, [playing, curveTimes, curveFreqs]);
+  }, [playing, curveTimes, curveFreqs, instrument]);
 
   const handlePlayStaccato = useCallback(async () => {
     stopAll();
     setCompareLabel(null);
     setPlaying(true);
-    await playStaccato(sorted, 1, () => setPlaying(false));
-  }, [sorted]);
+    await playStaccato(sorted, 1, () => setPlaying(false), instrument);
+  }, [sorted, instrument]);
 
   const handleStop = useCallback(() => {
     stopAll();
@@ -188,9 +204,14 @@ export default function DemoApp() {
       compareSegments,
       0.5,
       setCompareLabel,
-      () => setPlaying(false)
+      () => setPlaying(false),
+      instrument
     );
-  }, [compareSegments]);
+  }, [compareSegments, instrument]);
+
+  const handleChangeInstrument = useCallback((id: InstrumentId) => {
+    setInstrument(id);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -285,6 +306,24 @@ export default function DemoApp() {
                 />
               </div>
 
+              <div data-tour="instrument">
+                <div className="instrument-row" role="radiogroup" aria-label="Instrument">
+                  <span className="instrument-label">Instrument</span>
+                  {INSTRUMENTS.map((inst) => (
+                    <button
+                      key={inst.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={instrument === inst.id}
+                      className={`instrument-chip ${instrument === inst.id ? 'active' : ''}`}
+                      onClick={() => handleChangeInstrument(inst.id)}
+                    >
+                      {inst.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div data-tour="transport">
                 <TransportControls
                   points={sorted}
@@ -293,6 +332,7 @@ export default function DemoApp() {
                   playing={playing}
                   compareLabel={compareLabel}
                   compareSegments={compareSegments}
+                  instrument={instrument}
                   onPlayGlide={handlePlayGlide}
                   onPlayStaccato={handlePlayStaccato}
                   onStop={handleStop}
