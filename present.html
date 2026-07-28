@@ -1,0 +1,1001 @@
+Interpolation in music · HTML
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Interpolation in Music — Project Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --paper: #f4f1ea;
+            --paper-panel: #faf8f3;
+            --ink: #1c1a16;
+            --ink-dim: #6b6558;
+            --hair: #ddd7c8;
+            --hair-strong: #1c1a16;
+            --accent: #bf4326;
+            --accent-tint: #f4e2da;
+            --good: #3f6b52;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: "Source Serif 4", serif;
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .mono {
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        a {
+            color: var(--accent);
+        }
+
+        /* ---------- HEADER BAR ---------- */
+        .topbar {
+            background: var(--ink);
+            color: var(--paper);
+            padding: 1.6rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        .topbar h1 {
+            font-size: 1.9rem;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -.01em;
+        }
+
+        .topbar .meta {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .72rem;
+            color: #c9c3b3;
+            text-align: right;
+            line-height: 1.6;
+        }
+
+        section {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 4.2rem 2rem;
+            border-bottom: 1px solid var(--hair);
+        }
+
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 .3rem;
+        }
+
+        h3 {
+            font-weight: 700;
+            margin: 0;
+        }
+
+        p {
+            color: #39352c;
+            max-width: 64ch;
+        }
+
+        .eyebrow {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .68rem;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin: 0 0 .6rem 0;
+        }
+
+        .lede {
+            color: var(--ink-dim);
+            font-size: 1.05rem;
+            max-width: 56ch;
+            margin-top: .8rem;
+        }
+
+        /* ---------- TAB CONTROL (reused pattern) ---------- */
+        .tabs {
+            display: flex;
+            border: 1px solid var(--hair-strong);
+            border-radius: 2px;
+            overflow: hidden;
+            width: fit-content;
+            margin-top: 1.6rem;
+        }
+
+        .tabs button {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .78rem;
+            background: var(--paper-panel);
+            border: none;
+            border-right: 1px solid var(--hair-strong);
+            color: var(--ink-dim);
+            padding: .55rem 1rem;
+            cursor: pointer;
+        }
+
+        .tabs button:last-child {
+            border-right: none;
+        }
+
+        .tabs button[data-active="true"] {
+            background: var(--ink);
+            color: var(--paper);
+        }
+
+        .method-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--hair);
+            gap: 1.6rem;
+            margin-top: 2rem;
+        }
+
+        .method-tabs button {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .82rem;
+            background: none;
+            border: none;
+            color: var(--ink-dim);
+            cursor: pointer;
+            padding: 0 0 .7rem;
+            position: relative;
+            top: 1px;
+        }
+
+        .method-tabs button[data-active="true"] {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            font-weight: 700;
+        }
+
+        /* ---------- GRID PANEL ---------- */
+        .panel-row {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1.4rem;
+            margin-top: 1.2rem;
+            align-items: start;
+        }
+
+        .grid-panel {
+            border: 1.5px solid var(--hair-strong);
+            border-radius: 2px;
+            background: var(--paper-panel);
+            padding: .9rem;
+        }
+
+        .grid-caption {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .72rem;
+            color: var(--ink-dim);
+            margin-top: .7rem;
+        }
+
+        .side-panel {
+            border: 1px solid var(--hair);
+            border-radius: 2px;
+            background: var(--paper-panel);
+            padding: 1.1rem 1.2rem;
+        }
+
+        .side-panel .eyebrow {
+            margin-bottom: .5rem;
+        }
+
+        .side-panel p {
+            font-size: .88rem;
+            margin: .5rem 0 0;
+        }
+
+        .side-panel .fact {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .76rem;
+            color: var(--ink);
+            background: var(--paper);
+            border: 1px solid var(--hair);
+            border-radius: 2px;
+            padding: .6rem .7rem;
+            margin-top: .7rem;
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .curve {
+            fill: none;
+            stroke-width: 2.6;
+            transition: opacity .2s;
+        }
+
+        .curve.dim {
+            opacity: .12;
+        }
+
+        .pt {
+            fill: var(--ink);
+            stroke: var(--paper-panel);
+            stroke-width: 1.5;
+        }
+
+        .gridline {
+            stroke: var(--hair);
+            stroke-width: 1;
+        }
+
+        .extrap-zone {
+            fill: var(--accent-tint);
+        }
+
+        /* ---------- WHY (two-panel) ---------- */
+        .why-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1.5rem;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .why-panel {
+            border: 1px solid var(--hair);
+            border-radius: 2px;
+            padding: 1.4rem;
+            background: var(--paper-panel);
+            text-align: center;
+        }
+
+        .why-panel .cap {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .7rem;
+            color: var(--ink-dim);
+            letter-spacing: .08em;
+            margin-top: .8rem;
+            text-transform: uppercase;
+        }
+
+        .why-arrow {
+            color: var(--accent);
+            font-size: 1.4rem;
+        }
+
+        /* ---------- PROBLEMS ---------- */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1px;
+            background: var(--hair);
+            border: 1px solid var(--hair);
+            margin-top: 1.4rem;
+        }
+
+        .problem {
+            background: var(--paper-panel);
+            padding: 1.4rem 1.3rem;
+        }
+
+        .problem svg {
+            height: 32px;
+            width: 32px;
+            margin-bottom: .8rem;
+        }
+
+        .problem h3 {
+            font-size: 1rem;
+            margin-bottom: .4rem;
+        }
+
+        .problem p {
+            font-size: .9rem;
+            margin: 0;
+            max-width: none;
+        }
+
+        .problem .fix {
+            color: var(--accent);
+            font-family: "JetBrains Mono", monospace;
+            font-size: .68rem;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin-top: .6rem;
+            display: block;
+        }
+
+        /* ---------- METHODS TABLE ---------- */
+        .method-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.6rem;
+            font-size: .92rem;
+        }
+
+        .method-table th {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .66rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--ink-dim);
+            text-align: left;
+            padding: .5rem .6rem;
+            border-bottom: 1.5px solid var(--hair-strong);
+        }
+
+        .method-table td {
+            padding: .7rem .6rem;
+            border-bottom: 1px solid var(--hair);
+            vertical-align: top;
+        }
+
+        .swatch {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin-right: .5rem;
+        }
+
+        /* ---------- RUNGE ---------- */
+        .runge-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.6rem;
+        }
+
+        .runge-card {
+            border: 1px solid var(--hair-strong);
+            border-radius: 2px;
+            padding: 1.1rem;
+            background: var(--paper-panel);
+        }
+
+        .runge-card .cap {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .7rem;
+            color: var(--ink-dim);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-top: .6rem;
+        }
+
+        /* ---------- AUDIO CHAIN ---------- */
+        .chain {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-top: 1.8rem;
+            flex-wrap: wrap;
+        }
+
+        .chain-box {
+            border: 1px solid var(--hair-strong);
+            border-radius: 2px;
+            padding: .9rem 1.1rem;
+            font-family: "JetBrains Mono", monospace;
+            font-size: .76rem;
+            color: var(--ink);
+            background: var(--paper-panel);
+            flex: 1;
+            min-width: 170px;
+            text-align: center;
+        }
+
+        .chain-box span {
+            color: var(--ink-dim);
+            display: block;
+            margin-top: .35rem;
+        }
+
+        .chain-arrow {
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .engine-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .engine-card {
+            border: 1px solid var(--hair);
+            border-radius: 2px;
+            padding: 1.2rem;
+            background: var(--paper-panel);
+        }
+
+        .engine-card h3 {
+            font-size: .95rem;
+            margin-bottom: .5rem;
+        }
+
+        .engine-card p {
+            font-size: .87rem;
+        }
+
+        .engine-card.bad {
+            opacity: .65;
+        }
+
+        .engine-card.good {
+            border-color: var(--accent);
+            border-width: 1.5px;
+        }
+
+        /* ---------- STACK TABLE ---------- */
+        .stack-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.6rem;
+            font-size: .88rem;
+        }
+
+        .stack-table td {
+            padding: .55rem .6rem;
+            border-bottom: 1px solid var(--hair);
+        }
+
+        .stack-table td:first-child {
+            font-family: "JetBrains Mono", monospace;
+            color: var(--accent);
+            white-space: nowrap;
+            width: 1%;
+        }
+
+        /* ---------- ARCHITECTURE ---------- */
+        pre.tree {
+            font-family: "JetBrains Mono", monospace;
+            font-size: .78rem;
+            color: var(--ink);
+            background: var(--paper-panel);
+            border: 1px solid var(--hair-strong);
+            border-radius: 2px;
+            padding: 1.2rem 1.4rem;
+            overflow-x: auto;
+            margin-top: 1.6rem;
+            line-height: 1.65;
+        }
+
+        .tree .dir {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .tree .note {
+            color: var(--ink-dim);
+        }
+
+        /* ---------- SUMMARY ---------- */
+        .summary-list {
+            list-style: none;
+            margin: 1.6rem 0 0;
+            padding: 0;
+        }
+
+        .summary-list li {
+            border-left: 2px solid var(--accent);
+            padding: .4rem 0 .4rem 1rem;
+            margin-bottom: 1rem;
+            font-size: .98rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2.6rem 1.5rem 3.5rem;
+            color: var(--ink-dim);
+            font-family: "JetBrains Mono", monospace;
+            font-size: .72rem;
+            letter-spacing: .03em;
+        }
+
+        @media (max-width:720px) {
+            .panel-row {
+                grid-template-columns: 1fr;
+            }
+
+            .why-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .why-arrow {
+                transform: rotate(90deg);
+            }
+
+            .runge-grid,
+            .engine-compare {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <h1>Interpolation in Music</h1>
+        <div class="meta">Numerical Methods project<br>Hackathon build — interactive explainer</div>
+    </div>
+
+    <section id="hero">
+        <p class="eyebrow">Overview</p>
+        <h2>Draw a curve through a few notes. Hear it, don't just read it.</h2>
+        <p class="lede">Place control points on a pitch-time grid, pick an interpolation method, and the curve plays
+            back as a real glide — so the difference between Linear, Lagrange, and Cubic Spline is something you hear,
+            not just see.</p>
+
+        <div class="method-tabs" id="hero-tabs">
+            <button data-target="linear" data-active="true">Linear</button>
+            <button data-target="poly">Lagrange</button>
+            <button data-target="spline"
+                style="color:var(--accent); font-weight:700; border-bottom:2px solid var(--accent);">Cubic
+                Spline</button>
+        </div>
+
+        <div class="panel-row">
+            <div class="grid-panel">
+                <svg id="hero-roll" viewBox="0 0 620 260" preserveAspectRatio="none"></svg>
+                <div class="grid-caption">Click to add · drag to move · 6 points</div>
+            </div>
+            <div class="side-panel">
+                <p class="eyebrow">Formula</p>
+                <h3 style="font-size:1rem;">Natural cubic spline</h3>
+                <p>Piecewise cubics with continuous second derivative (C²). Solved as a tridiagonal system with natural
+                    end conditions.</p>
+                <div class="fact">S₀(x) = a₀ + b₀(x−x₀) + c₀(x−x₀)² + d₀(x−x₀)³</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="why">
+        <p class="eyebrow">Motivation</p>
+        <h2>Why turn curves into sound?</h2>
+        <p>Interpolation is normally taught as a static picture — a polynomial, an error number, an oscillating line.
+            Pitch is frequency, frequency is logarithmic, and a glide between two notes is exactly the continuous
+            function interpolation computes. So the question stops being "which method has lower error" and becomes
+            "which one sounds natural."</p>
+
+        <div class="why-grid">
+            <div class="why-panel">
+                <svg viewBox="0 0 120 70" width="90" height="52" style="margin:0 auto;">
+                    <polyline points="5,55 30,20 55,45 80,10 105,30" fill="none" stroke="#6b6558" stroke-width="2.5" />
+                    <circle cx="5" cy="55" r="2.5" fill="#1c1a16" />
+                    <circle cx="30" cy="20" r="2.5" fill="#1c1a16" />
+                    <circle cx="55" cy="45" r="2.5" fill="#1c1a16" />
+                    <circle cx="80" cy="10" r="2.5" fill="#1c1a16" />
+                    <circle cx="105" cy="30" r="2.5" fill="#1c1a16" />
+                </svg>
+                <div class="cap">A curve on paper</div>
+            </div>
+            <div class="why-arrow">→</div>
+            <div class="why-panel">
+                <svg viewBox="0 0 120 70" width="90" height="52" style="margin:0 auto;">
+                    <path d="M5,35 Q20,10 35,35 T65,35 T95,35 T115,35" fill="none" stroke="var(--accent)"
+                        stroke-width="2.5" />
+                </svg>
+                <div class="cap">A glide you hear</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="problems">
+        <p class="eyebrow">What I had to solve</p>
+        <h2>Six problems, six fixes</h2>
+        <div class="problem-grid">
+
+            <div class="problem">
+                <svg viewBox="0 0 34 34">
+                    <polyline points="2,28 9,6 15,24 21,4 27,20 32,10" fill="none" stroke="var(--accent)"
+                        stroke-width="2" />
+                </svg>
+                <h3>Runge's phenomenon felt abstract</h3>
+                <p>Lagrange curves through many points overshoot wildly between them, but a graph alone doesn't make
+                    that feel like a real problem.</p>
+                <span class="fix">Fix → you hear the pitch shoot to extremes</span>
+            </div>
+
+            <div class="problem">
+                <svg viewBox="0 0 34 34">
+                    <path d="M2,26 L14,26 L14,8 L26,8 L26,20" fill="none" stroke="#6b6558" stroke-width="2" />
+                </svg>
+                <h3>"Smooth on a graph" ≠ smooth to the ear</h3>
+                <p>Linear interpolation looks fine plotted, but a glide from straight segments sounds like a machine
+                    snapping direction.</p>
+                <span class="fix">Fix → spline glide sounds like a real portamento</span>
+            </div>
+
+            <div class="problem">
+                <svg viewBox="0 0 34 34">
+                    <line x1="2" y1="6" x2="2" y2="28" stroke="var(--good)" stroke-width="2" />
+                    <line x1="12" y1="6" x2="12" y2="28" stroke="var(--good)" stroke-width="2" />
+                    <line x1="22" y1="6" x2="22" y2="28" stroke="var(--good)" stroke-width="2" />
+                    <line x1="32" y1="6" x2="32" y2="28" stroke="var(--good)" stroke-width="2" />
+                </svg>
+                <h3>Newton forward needs equal spacing</h3>
+                <p>Students forget the constraint, then wonder why their difference table breaks on uneven notes.</p>
+                <span class="fix">Fix → app detects spacing, falls back automatically</span>
+            </div>
+
+            <div class="problem">
+                <svg viewBox="0 0 34 34">
+                    <path d="M2,20 Q9,4 17,20 T32,20" fill="none" stroke="var(--accent)" stroke-width="2" />
+                </svg>
+                <h3>Oscillator synths sounded fake</h3>
+                <p>No amount of ADSR or formant tuning stopped every instrument from sounding like the same synthetic
+                    tone.</p>
+                <span class="fix">Fix → switched to real recorded instrument samples</span>
+            </div>
+
+            <div class="problem">
+                <svg viewBox="0 0 34 34">
+                    <circle cx="8" cy="17" r="2" fill="#6b6558" />
+                    <circle cx="17" cy="17" r="2" fill="#6b6558" />
+                    <circle cx="26" cy="17" r="2" fill="#6b6558" />
+                </svg>
+                <h3>A metronome-like clicking crept in</h3>
+                <p>Noise-burst attack transients on every note lined up rhythmically into a phantom click track.</p>
+                <span class="fix">Fix → removed the noise bus, kept the sample's natural attack</span>
+            </div>
+
+            <div class="problem">
+                <svg viewBox="0 0 34 34">
+                    <rect x="4" y="14" width="6" height="12" fill="var(--good)" />
+                    <rect x="14" y="10" width="6" height="16" fill="var(--good)" />
+                    <rect x="24" y="17" width="6" height="9" fill="var(--good)" />
+                </svg>
+                <h3>All instruments blurred into one blip</h3>
+                <p>Tuning sustain uniformly collapsed piano, violin, and flute into the same short envelope.</p>
+                <span class="fix">Fix → identity now comes from the recording, not the ADSR</span>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="methods">
+        <p class="eyebrow">The mathematics</p>
+        <h2>Same six notes, three sounds</h2>
+        <p>Lagrange, Newton's divided differences, and Newton's forward difference all build the <em>same</em> single
+            polynomial through the points — they only differ in how that polynomial is computed. So there are really
+            three audibly distinct shapes:</p>
+
+        <div class="grid-panel" style="margin-top:1.4rem;">
+            <svg id="method-roll" viewBox="0 0 620 240" preserveAspectRatio="none"></svg>
+            <div class="grid-caption">Linear · Lagrange/Newton family · Cubic spline — same 6 points</div>
+        </div>
+
+        <table class="method-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Continuity</th>
+                    <th>What you hear</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="swatch" style="background:#6b6558"></span>Linear</td>
+                    <td class="mono">C0</td>
+                    <td>Straight segments — abrupt turns at each note, mechanical</td>
+                </tr>
+                <tr>
+                    <td><span class="swatch" style="background:var(--accent)"></span>Lagrange</td>
+                    <td class="mono">C∞ on interval, unbounded between points</td>
+                    <td>Musical with few notes, wild pitch swings with many — Runge's phenomenon, audible</td>
+                </tr>
+                <tr>
+                    <td><span class="swatch" style="background:var(--accent)"></span>Newton divided difference</td>
+                    <td class="mono">same as Lagrange</td>
+                    <td>Identical sound — same polynomial, built incrementally</td>
+                </tr>
+                <tr>
+                    <td><span class="swatch" style="background:var(--accent)"></span>Newton forward/backward</td>
+                    <td class="mono">same as Lagrange</td>
+                    <td>Identical sound, only valid on evenly spaced notes</td>
+                </tr>
+                <tr>
+                    <td><span class="swatch" style="background:var(--good)"></span>Natural cubic spline</td>
+                    <td class="mono">C2</td>
+                    <td>Continuous acceleration in pitch — closest to a real musician's slide</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="runge">
+        <p class="eyebrow">Runge's phenomenon</p>
+        <h2>Where the polynomial method breaks</h2>
+        <p>Extend the same polynomial slightly past the first and last note and it swings far outside the pitch range
+            you actually played. Spacing the notes at Chebyshev positions instead of evenly pulls the swing back in.</p>
+
+        <div class="runge-grid">
+            <div class="runge-card">
+                <svg viewBox="0 0 300 140">
+                    <g id="runge-equal"></g>
+                </svg>
+                <div class="cap">Equally spaced notes — visible overshoot</div>
+            </div>
+            <div class="runge-card">
+                <svg viewBox="0 0 300 140">
+                    <g id="runge-cheb"></g>
+                </svg>
+                <div class="cap">Chebyshev-spaced notes — overshoot pulled back in</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="audio">
+        <p class="eyebrow">Audio engine</p>
+        <h2>From curve to instrument</h2>
+        <p>The pitch-time curve doesn't drive a synthesizer — it drives a real recording. Each interpolated value
+            becomes a pitch-shift delta applied to a sampled instrument note as it plays.</p>
+
+        <div class="chain">
+            <div class="chain-box">Interpolated pitch curve<span>MIDI values over time</span></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-box">WebAudioFont <em>slides</em><span>{when, delta} pairs</span></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-box">Real instrument sample<span>pitch-shifted in place</span></div>
+        </div>
+
+        <div class="engine-compare">
+            <div class="engine-card bad">
+                <h3>Oscillator engine</h3>
+                <p>Sine/sawtooth waves shaped with ADSR. Every instrument converges toward the same synthetic tone;
+                    glides sound mechanical. Kept only as an offline, educational fallback.</p>
+            </div>
+            <div class="engine-card good">
+                <h3>Sample engine (WebAudioFont)</h3>
+                <p>Real FluidR3_GM recordings — piano, violin, flute, sax, guitar, clarinet, synth brass. Bow attack,
+                    body resonance, and harmonic evolution come from the recording itself.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="stack">
+        <p class="eyebrow">Built with</p>
+        <h2>Technology stack</h2>
+        <table class="stack-table">
+            <tr>
+                <td>Next.js 14</td>
+                <td>App Router, good for math-heavy rendering</td>
+            </tr>
+            <tr>
+                <td>TypeScript</td>
+                <td>Typed control points and interpolation methods</td>
+            </tr>
+            <tr>
+                <td>Vanilla CSS</td>
+                <td>Full control over the custom pitch-grid layout</td>
+            </tr>
+            <tr>
+                <td>KaTeX</td>
+                <td>Renders the formulas in the live math panel</td>
+            </tr>
+            <tr>
+                <td>Web Audio API + WebAudioFont</td>
+                <td>Real instrument samples, precisely scheduled</td>
+            </tr>
+            <tr>
+                <td>FluidR3_GM</td>
+                <td>General MIDI soundfont, 128 instruments, via CDN</td>
+            </tr>
+        </table>
+    </section>
+
+    <section id="architecture">
+        <p class="eyebrow">Structure</p>
+        <h2>How it's organized</h2>
+        <pre class="tree"><span class="dir">app/</span>          layout, page — renders the demo
+<span class="dir">components/</span>   pitch grid · math panel · transport · error analysis
+              Chebyshev comparison · reference section · onboarding
+<span class="dir">lib/</span>          interpolation.ts <span class="note">— the 5 methods</span>
+              pitch.ts <span class="note">— MIDI ↔ Hz</span>
+              sampler.ts <span class="note">— WebAudioFont engine</span>
+              audio.ts <span class="note">— oscillator engine (reference)</span>
+              errorAnalysis.ts · presets.ts
+<span class="dir">public/</span>       WebAudioFontPlayer.js</pre>
+    </section>
+
+    <section id="summary">
+        <p class="eyebrow">Takeaways</p>
+        <h2>What this project shows</h2>
+        <ul class="summary-list">
+            <li>Numerical methods aren't abstract — they have consequences you can perceive.</li>
+            <li>Cubic spline wins both ways: C2 continuity mathematically, natural glides perceptually.</li>
+            <li>Runge's phenomenon is real and audible, not just a warning in a textbook.</li>
+            <li>Node spacing matters as much as method choice — Chebyshev nodes tame the overshoot.</li>
+            <li>Real samples beat synthesis: instrument identity lives in the recording, not the envelope.</li>
+        </ul>
+    </section>
+
+    <footer>Interpolation in Music — a hackathon project</footer>
+
+    <script>
+        // ---------- shared curve math ----------
+        function linearAt(pts, x) {
+            for (let i = 0; i < pts.length - 1; i++) {
+                if (x >= pts[i][0] && x <= pts[i + 1][0]) {
+                    const [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
+                    return y0 + (y1 - y0) / (x1 - x0) * (x - x0);
+                }
+            }
+            return pts[pts.length - 1][1];
+        }
+        function lagrangeAt(pts, x) {
+            let total = 0;
+            for (let i = 0; i < pts.length; i++) {
+                let term = pts[i][1];
+                for (let j = 0; j < pts.length; j++) {
+                    if (j !== i) term *= (x - pts[j][0]) / (pts[i][0] - pts[j][0]);
+                }
+                total += term;
+            }
+            return total;
+        }
+        function naturalSpline(pts) {
+            const n = pts.length - 1;
+            const x = pts.map(p => p[0]), y = pts.map(p => p[1]);
+            const h = []; for (let i = 0; i < n; i++) h.push(x[i + 1] - x[i]);
+            const alpha = new Array(n + 1).fill(0);
+            for (let i = 1; i < n; i++) alpha[i] = (3 / h[i]) * (y[i + 1] - y[i]) - (3 / h[i - 1]) * (y[i] - y[i - 1]);
+            const l = new Array(n + 1).fill(1), mu = new Array(n + 1).fill(0), z = new Array(n + 1).fill(0);
+            for (let i = 1; i < n; i++) {
+                l[i] = 2 * (x[i + 1] - x[i - 1]) - h[i - 1] * mu[i - 1];
+                mu[i] = h[i] / l[i];
+                z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+            }
+            const c = new Array(n + 1).fill(0), b = new Array(n).fill(0), d = new Array(n).fill(0);
+            for (let j = n - 1; j >= 0; j--) {
+                c[j] = z[j] - mu[j] * c[j + 1];
+                b[j] = (y[j + 1] - y[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3;
+                d[j] = (c[j + 1] - c[j]) / (3 * h[j]);
+            }
+            return function (xx) {
+                let i = n - 1;
+                for (let k = 0; k < n; k++) { if (xx >= x[k] && xx <= x[k + 1]) { i = k; break; } }
+                const dx = xx - x[i];
+                return y[i] + b[i] * dx + c[i] * dx * dx + d[i] * dx * dx * dx;
+            };
+        }
+        function samplePath(fn, xMin, xMax, steps, xToPx, yToPx) {
+            let d = "";
+            for (let s = 0; s <= steps; s++) {
+                const x = xMin + (xMax - xMin) * s / steps;
+                const y = fn(x);
+                const px = xToPx(x), py = yToPx(y);
+                d += (s === 0 ? "M" : "L") + px.toFixed(1) + "," + py.toFixed(1) + " ";
+            }
+            return d;
+        }
+
+        // shared control points (x: 0..5 "beats", y: 0..10 "pitch rows")
+        const PTS = [[0, 3], [1, 7], [2, 2], [3, 8], [4, 4], [5, 6]];
+        const spline = naturalSpline(PTS);
+
+        function makeMappers(w, h, pad) {
+            return {
+                xToPx: x => pad + x * (w - 2 * pad) / 5,
+                yToPx: y => (h - pad) - y * ((h - 2 * pad) / 10)
+            };
+        }
+
+        function buildRoll(svgEl, w, h) {
+            const ns = "http://www.w3.org/2000/svg";
+            const pad = 30;
+            const { xToPx, yToPx } = makeMappers(w, h, pad);
+            for (let r = 0; r <= 10; r++) {
+                const line = document.createElementNS(ns, "line");
+                line.setAttribute("x1", pad); line.setAttribute("x2", w - pad);
+                line.setAttribute("y1", yToPx(r)); line.setAttribute("y2", yToPx(r));
+                line.setAttribute("class", "gridline");
+                svgEl.appendChild(line);
+            }
+            for (let c = 0; c <= 5; c++) {
+                const line = document.createElementNS(ns, "line");
+                line.setAttribute("y1", pad); line.setAttribute("y2", h - pad);
+                line.setAttribute("x1", xToPx(c)); line.setAttribute("x2", xToPx(c));
+                line.setAttribute("class", "gridline");
+                svgEl.appendChild(line);
+            }
+            const defs = [
+                { id: "linear", color: "#6b6558", fn: x => linearAt(PTS, x) },
+                { id: "poly", color: "#bf4326", fn: x => lagrangeAt(PTS, x) },
+                { id: "spline", color: "#3f6b52", fn: spline },
+            ];
+            const paths = {};
+            defs.forEach(d => {
+                const p = document.createElementNS(ns, "path");
+                p.setAttribute("class", "curve");
+                p.setAttribute("stroke", d.color);
+                p.setAttribute("d", samplePath(d.fn, 0, 5, 140, xToPx, yToPx));
+                svgEl.appendChild(p);
+                paths[d.id] = p;
+            });
+            PTS.forEach(([x, y]) => {
+                const c = document.createElementNS(ns, "circle");
+                c.setAttribute("cx", xToPx(x)); c.setAttribute("cy", yToPx(y));
+                c.setAttribute("r", 4.5); c.setAttribute("class", "pt");
+                svgEl.appendChild(c);
+            });
+            return paths;
+        }
+
+        const heroRoll = document.getElementById("hero-roll");
+        const heroPaths = buildRoll(heroRoll, 620, 260);
+        const methodRoll = document.getElementById("method-roll");
+        buildRoll(methodRoll, 620, 240);
+
+        function setActive(id) {
+            Object.keys(heroPaths).forEach(k => {
+                heroPaths[k].classList.toggle("dim", k !== id);
+            });
+            document.querySelectorAll("#hero-tabs button").forEach(btn => {
+                const on = btn.dataset.target === id;
+                btn.dataset.active = on ? "true" : "false";
+                btn.style.color = on ? "var(--accent)" : "var(--ink-dim)";
+                btn.style.fontWeight = on ? "700" : "400";
+                btn.style.borderBottom = on ? "2px solid var(--accent)" : "none";
+            });
+        }
+        document.querySelectorAll("#hero-tabs button").forEach(btn => {
+            btn.addEventListener("click", () => setActive(btn.dataset.target));
+        });
+        setActive("spline");
+
+        // ---------- Runge / Chebyshev illustration ----------
+        function drawRungeCard(gId, pts, color) {
+            const g = document.getElementById(gId);
+            const ns = "http://www.w3.org/2000/svg";
+            const n = pts.length - 1;
+            const fn = x => lagrangeAt(pts, x);
+            const toPx = x => 20 + (x / n) * 260;
+            const toPy = y => 120 - y * 13;
+            const axis = document.createElementNS(ns, "line");
+            axis.setAttribute("x1", 10); axis.setAttribute("x2", 290);
+            axis.setAttribute("y1", 120); axis.setAttribute("y2", 120);
+            axis.setAttribute("stroke", "var(--hair-strong)");
+            g.appendChild(axis);
+            const path = document.createElementNS(ns, "path");
+            path.setAttribute("class", "curve");
+            path.setAttribute("stroke", color);
+            path.setAttribute("d", samplePath(fn, -0.15, n + 0.15, 120, x => 20 + ((x) / n) * 260, toPy));
+            g.appendChild(path);
+            pts.forEach(p => {
+                const c = document.createElementNS(ns, "circle");
+                c.setAttribute("cx", toPx(p[0])); c.setAttribute("cy", toPy(p[1]));
+                c.setAttribute("r", 3.5); c.setAttribute("class", "pt");
+                g.appendChild(c);
+            });
+        }
+        drawRungeCard("runge-equal", [[0, 1], [1, 6], [2, 2], [3, 7]], "#bf4326");
+        drawRungeCard("runge-cheb", [[0, 2], [1, 5], [2, 3], [3, 6]], "#3f6b52");
+    </script>
+</body>
+
+</html>

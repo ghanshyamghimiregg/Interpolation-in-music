@@ -32,13 +32,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Place notes on a pitch–time grid, pick an interpolation method, and hear the glide.
               </p>
             </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+            <a
+              href="/present.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="present-btn"
+              title="Open project overview presentation"
+            >
+              ▶ Present
+            </a>
             <p className="credit-block">
               Ghanshyam Ghimire · BTech AI, 4th Sem · Kathmandu University
               <br />
               Course project for Sandesh Thakuri
             </p>
           </div>
-        </header>
+        </div>
+      </header>
 
         <main>{children}</main>
 

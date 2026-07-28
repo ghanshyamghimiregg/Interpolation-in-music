@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interpolation in Music — Project Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Exact tokens from globals.css ── */
+  :root {
+    --paper:       #faf8f4;
+    --paper-dark:  #f0ece4;
+    --ink:         #1a1814;
+    --ink-muted:   #6b6560;
+    --rule:        #d4cfc4;
+    --accent:      #b8432a;
+    --accent-dim:  #e8d5d0;
+    --good:        #3a6650;
+    --font-serif:  "Source Serif 4", Georgia, serif;
+    --font-mono:   "JetBrains Mono", "Courier New", monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-serif);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+  .mono { font-family: var(--font-mono); }
+
+  /* ── TOP BAR — matches .site-header ── */
+  .topbar {
+    border-bottom: 2px solid var(--ink);
+    padding: 1.25rem 1.5rem;
+    background: var(--paper-dark);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .topbar h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .topbar .tagline {
+    margin: 0.35rem 0 0;
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+  }
+  .topbar .credit-block {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--ink-muted);
+    text-align: right;
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    padding: 0.3rem 0.65rem;
+    margin-bottom: 0.4rem;
+  }
+  .back-link:hover { background: var(--accent-dim); }
+
+  /* ── NAV STRIP ── */
+  .nav-strip {
+    background: var(--paper-dark);
+    border-bottom: 1px solid var(--rule);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .nav-strip a {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-muted);
+    padding: 0.55rem 1rem;
+    border-right: 1px solid var(--rule);
+  }
+  .nav-strip a:hover { color: var(--accent); background: var(--accent-dim); }
+
+  /* ── SECTIONS ── */
+  section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  section:last-of-type { border-bottom: none; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.6rem;
+  }
+  h2 { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.4rem; }
+  h3 { font-weight: 700; margin: 0 0 0.3rem; }
+  .lede { color: var(--ink-muted); font-size: 1.05rem; max-width: 58ch; margin-top: 0.8rem; }
+  p { color: #39352c; max-width: 66ch; }
+
+  /* ── VISUALISATION PANELS ── */
+  .panel-row { display: grid; grid-template-columns: 1fr 280px; gap: 1.4rem; margin-top: 1.4rem; align-items: start; }
+  .grid-panel {
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    background: var(--paper-dark);
+    padding: 0.9rem;
+  }
+  .grid-caption {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+    margin-top: 0.6rem;
+  }
+  .side-panel {
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper-dark);
+    padding: 1.1rem 1.2rem;
+  }
+  .side-panel p { font-size: 0.88rem; margin: 0.5rem 0 0; }
+  .code-box {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.6rem 0.75rem;
+    margin-top: 0.8rem;
+    line-height: 1.65;
+  }
+
+  svg { display: block; width: 100%; height: auto; }
+  .curve { fill: none; stroke-width: 2.6; }
+  .curve.dim { opacity: 0.1; }
+  .pt { fill: var(--ink); stroke: var(--paper-dark); stroke-width: 1.5; }
+  .gridline { stroke: var(--rule); stroke-width: 1; }
+
+  /* ── METHOD TABS ── */
+  .method-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--rule);
+    gap: 1.6rem;
+    margin-top: 2rem;
+  }
+  .method-tabs button {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: none;
+    border: none;
+    color: var(--ink-muted);
+    cursor: pointer;
+    padding: 0 0 0.65rem;
+    position: relative; top: 1px;
+    transition: color 0.15s;
+  }
+  .method-tabs button.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    font-weight: 700;
+  }
+
+  /* ── WHY GRID ── */
+  .why-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1.5rem; align-items: center; margin-top: 2rem; }
+  .why-panel { border: 1px solid var(--rule); border-radius: 2px; padding: 1.4rem; background: var(--paper-dark); text-align: center; }
+  .why-panel .cap { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-muted); letter-spacing: 0.08em; margin-top: 0.8rem; text-transform: uppercase; }
+  .why-arrow { color: var(--accent); font-size: 1.4rem; }
+
+  /* ── PROBLEMS GRID ── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 1.4rem;
+  }
+  .problem { background: var(--paper-dark); padding: 1.4rem 1.3rem; }
+  .problem svg { height: 30px; width: 30px; margin-bottom: 0.7rem; }
+  .problem h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+  .problem p { font-size: 0.88rem; margin: 0; max-width: none; }
+  .fix {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 0.6rem;
+    display: block;
+  }
+
+  /* ── MATH SECTION ── */
+  .math-formula {
+    background: var(--paper-dark);
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    padding: 1.1rem 1.4rem;
+    margin: 1.2rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .math-formula .label { color: var(--ink-muted); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.3rem; display: block; }
+
+  /* ── METHOD TABLE ── */
+  .method-table { width: 100%; border-collapse: collapse; margin-top: 1.6rem; font-size: 0.9rem; }
+  .method-table th {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .method-table td { padding: 0.7rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 0.5rem; vertical-align: middle; }
+
+  /* ── RUNGE ── */
+  .runge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.6rem; }
+  .runge-card { border: 1px solid var(--ink); border-radius: 2px; padding: 1.1rem; background: var(--paper-dark); }
+  .runge-card .cap { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.6rem; }
+
+  /* ── AUDIO CHAIN ── */
+  .chain { display: flex; align-items: center; gap: 0.6rem; margin-top: 1.8rem; flex-wrap: wrap; }
+  .chain-box {
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    padding: 0.9rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--ink);
+    background: var(--paper-dark);
+    flex: 1;
+    min-width: 160px;
+    text-align: center;
+  }
+  .chain-box span { color: var(--ink-muted); display: block; margin-top: 0.3rem; }
+  .chain-arrow { color: var(--accent); font-size: 1.1rem; flex-shrink: 0; }
+
+  .engine-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+  .engine-card { border: 1px solid var(--rule); border-radius: 2px; padding: 1.2rem; background: var(--paper-dark); }
+  .engine-card h3 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+  .engine-card p { font-size: 0.86rem; max-width: none; }
+  .engine-card.bad { opacity: 0.6; }
+  .engine-card.good { border: 1.5px solid var(--accent); }
+
+  /* ── FEATURES GRID ── */
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-top: 1.4rem; }
+  .feature { background: var(--paper-dark); padding: 1.1rem 1.2rem; }
+  .feature h3 { font-size: 0.92rem; margin-bottom: 0.3rem; color: var(--ink); }
+  .feature p { font-size: 0.84rem; margin: 0; max-width: none; color: var(--ink-muted); }
+
+  /* ── STACK TABLE ── */
+  .stack-table { width: 100%; border-collapse: collapse; margin-top: 1.6rem; font-size: 0.88rem; }
+  .stack-table td { padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--rule); }
+  .stack-table td:first-child { font-family: var(--font-mono); color: var(--accent); white-space: nowrap; width: 1%; padding-right: 1.2rem; }
+
+  /* ── ARCHITECTURE TREE ── */
+  pre.tree {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink);
+    background: var(--paper-dark);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    padding: 1.2rem 1.4rem;
+    overflow-x: auto;
+    margin-top: 1.6rem;
+    line-height: 1.7;
+  }
+  .tree .dir { color: var(--accent); font-weight: 700; }
+  .tree .note { color: var(--ink-muted); }
+
+  /* ── SUMMARY LIST ── */
+  .summary-list { list-style: none; margin: 1.6rem 0 0; padding: 0; }
+  .summary-list li {
+    border-left: 2px solid var(--accent);
+    padding: 0.4rem 0 0.4rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.98rem;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 2.5rem 1.5rem 3.5rem;
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (max-width: 720px) {
+    .panel-row { grid-template-columns: 1fr; }
+    .why-grid { grid-template-columns: 1fr; }
+    .why-arrow { transform: rotate(90deg); }
+    .runge-grid, .engine-compare { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <h1>Interpolation in Music</h1>
+      <p class="tagline">Place notes on a pitch–time grid, pick an interpolation method, and hear the glide.</p>
+    </div>
+    <div class="credit-block">
+      <a href="/" class="back-link">← Back to App</a><br>
+      Ghanshyam Ghimire · BTech AI, 4th Sem · Kathmandu University<br>
+      Course project for Sandesh Thakuri
+    </div>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<nav class="nav-strip">
+  <a href="#overview">Overview</a>
+  <a href="#motivation">Motivation</a>
+  <a href="#problems">Problems Solved</a>
+  <a href="#pitch-math">Pitch Math</a>
+  <a href="#methods">Methods</a>
+  <a href="#runge">Runge's Phenomenon</a>
+  <a href="#audio">Audio Engine</a>
+  <a href="#features">Features</a>
+  <a href="#stack">Stack</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#summary">Takeaways</a>
+</nav>
+
+<!-- ── OVERVIEW ── -->
+<section id="overview">
+  <p class="eyebrow">Overview</p>
+  <h2>Draw a curve through a few notes. Hear it, don't just read it.</h2>
+  <p class="lede">Place control points on a pitch-time grid, pick an interpolation method, and the curve plays back as a real instrument glide — so the difference between Linear, Lagrange, and Cubic Spline is something you hear, not just see.</p>
+
+  <div class="method-tabs" id="hero-tabs">
+    <button data-target="linear" class="active">Linear</button>
+    <button data-target="poly">Lagrange</button>
+    <button data-target="spline">Cubic Spline</button>
+  </div>
+
+  <div class="panel-row">
+    <div class="grid-panel">
+      <svg id="hero-roll" viewBox="0 0 620 260" preserveAspectRatio="none"></svg>
+      <div class="grid-caption">6 control points · three curves on the same notes · click a tab to isolate one</div>
+    </div>
+    <div class="side-panel">
+      <p class="eyebrow">Active formula</p>
+      <h3 id="formula-name" style="font-size:1rem;">Piecewise linear</h3>
+      <p id="formula-desc">Connects consecutive points with straight segments. First derivative jumps at every knot — audibly "robotic."</p>
+      <div class="code-box" id="formula-code">y(x) = yᵢ + (yᵢ₊₁−yᵢ)/(xᵢ₊₁−xᵢ) × (x−xᵢ)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MOTIVATION ── -->
+<section id="motivation">
+  <p class="eyebrow">Motivation</p>
+  <h2>Why turn interpolation curves into sound?</h2>
+  <p>Interpolation is normally taught as a static picture — a polynomial, an error number, an oscillating line. Pitch is frequency, frequency is logarithmic, and a glide between two notes is exactly the continuous function that interpolation computes. So the question stops being "which method has lower error?" and becomes "which one sounds like a real musician?"</p>
+
+  <div class="why-grid">
+    <div class="why-panel">
+      <svg viewBox="0 0 120 70" width="90" height="52" style="margin:0 auto;">
+        <polyline points="5,55 30,20 55,45 80,10 105,30" fill="none" stroke="#6b6560" stroke-width="2.5"/>
+        <circle cx="5" cy="55" r="2.5" fill="#1a1814"/><circle cx="30" cy="20" r="2.5" fill="#1a1814"/>
+        <circle cx="55" cy="45" r="2.5" fill="#1a1814"/><circle cx="80" cy="10" r="2.5" fill="#1a1814"/>
+        <circle cx="105" cy="30" r="2.5" fill="#1a1814"/>
+      </svg>
+      <div class="cap">A curve on paper</div>
+    </div>
+    <div class="why-arrow">→</div>
+    <div class="why-panel">
+      <svg viewBox="0 0 120 70" width="90" height="52" style="margin:0 auto;">
+        <path d="M5,55 Q22,10 40,40 T80,25 T115,35" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+      </svg>
+      <div class="cap">A glide you hear</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROBLEMS ── -->
+<section id="problems">
+  <p class="eyebrow">What I had to solve</p>
+  <h2>Six problems, six fixes</h2>
+  <div class="problem-grid">
+
+    <div class="problem">
+      <svg viewBox="0 0 34 34"><polyline points="2,28 9,6 15,24 21,4 27,20 32,10" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>
+      <h3>Runge's phenomenon felt abstract</h3>
+      <p>Lagrange curves through many points overshoot wildly, but a graph alone doesn't make that feel like a real problem.</p>
+      <span class="fix">Fix → you hear the pitch shoot to extremes</span>
+    </div>
+
+    <div class="problem">
+      <svg viewBox="0 0 34 34"><path d="M2,26 L14,26 L14,8 L26,8 L26,20" fill="none" stroke="#6b6560" stroke-width="2"/></svg>
+      <h3>"Smooth on a graph" ≠ smooth to the ear</h3>
+      <p>Linear interpolation looks fine plotted, but a glide from straight segments sounds like a machine snapping direction at every knot.</p>
+      <span class="fix">Fix → spline glide sounds like a real portamento</span>
+    </div>
+
+    <div class="problem">
+      <svg viewBox="0 0 34 34">
+        <line x1="5" y1="6" x2="5" y2="28" stroke="var(--good)" stroke-width="2"/>
+        <line x1="13" y1="6" x2="13" y2="28" stroke="var(--good)" stroke-width="2"/>
+        <line x1="21" y1="6" x2="21" y2="28" stroke="var(--good)" stroke-width="2"/>
+        <line x1="29" y1="6" x2="29" y2="28" stroke="var(--good)" stroke-width="2"/>
+      </svg>
+      <h3>Newton forward needs equal spacing</h3>
+      <p>Students forget this constraint and wonder why their difference table breaks on unevenly placed notes.</p>
+      <span class="fix">Fix → app auto-detects spacing; falls back to divided differences</span>
+    </div>
+
+    <div class="problem">
+      <svg viewBox="0 0 34 34"><path d="M2,20 Q9,4 17,20 T32,20" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>
+      <h3>Oscillator synths sounded fake</h3>
+      <p>No amount of ADSR or formant tuning stopped every instrument from sounding like the same synthetic blip.</p>
+      <span class="fix">Fix → switched to real recorded FluidR3_GM samples</span>
+    </div>
+
+    <div class="problem">
+      <svg viewBox="0 0 34 34">
+        <circle cx="8"  cy="17" r="2" fill="#6b6560"/>
+        <circle cx="17" cy="17" r="2" fill="#6b6560"/>
+        <circle cx="26" cy="17" r="2" fill="#6b6560"/>
+      </svg>
+      <h3>A metronome-like clicking crept in</h3>
+      <p>Noise-burst attack transients on every note onset lined up rhythmically into a phantom click track.</p>
+      <span class="fix">Fix → removed the noise bus; sample's natural attack is enough</span>
+    </div>
+
+    <div class="problem">
+      <svg viewBox="0 0 34 34">
+        <rect x="4"  y="14" width="6" height="12" fill="var(--good)"/>
+        <rect x="14" y="10" width="6" height="16" fill="var(--good)"/>
+        <rect x="24" y="17" width="6" height="9"  fill="var(--good)"/>
+      </svg>
+      <h3>All instruments blurred into one blip</h3>
+      <p>Reducing sustain uniformly collapsed piano, violin, and flute into the same short envelope — indistinguishable.</p>
+      <span class="fix">Fix → identity comes from the recording, not the envelope</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── PITCH MATH ── -->
+<section id="pitch-math">
+  <p class="eyebrow">Fundamental math</p>
+  <h2>Why pitch must be logarithmic</h2>
+  <p>Human pitch perception is logarithmic — each octave doubles the frequency. Interpolating raw Hz values creates uneven-feeling glides. The app works entirely in <strong>MIDI space</strong> (linear semitones) and converts to Hz only for audio playback.</p>
+
+  <div class="math-formula">
+    <span class="label">MIDI → frequency (A4 = 440 Hz, MIDI 69)</span>
+    f(midi) = 440 × 2^((midi − 69) / 12)
+  </div>
+  <div class="math-formula">
+    <span class="label">Frequency → MIDI (inverse)</span>
+    midi(f) = 69 + 12 × log₂(f / 440)
+  </div>
+
+  <p>Consequence: interpolating in MIDI means equal pitch steps sound equal — a glide from C3 to C4 feels the same "distance" as C4 to C5, which is exactly how musicians experience pitch.</p>
+
+  <div class="math-formula">
+    <span class="label">WebAudioFont slide delta (semitones)</span>
+    Δ = midi(f_target) − midi(f_start) &nbsp;→&nbsp; fed as pitch delta to sample engine
+  </div>
+</section>
+
+<!-- ── METHODS ── -->
+<section id="methods">
+  <p class="eyebrow">The mathematics</p>
+  <h2>Same six notes, three distinct sounds</h2>
+  <p>Lagrange, Newton divided differences, and Newton forward difference all build the <em>same</em> single polynomial through the points — they differ only in how they compute it. So there are really three audibly distinct shapes:</p>
+
+  <div class="grid-panel" style="margin-top:1.4rem;">
+    <svg id="method-roll" viewBox="0 0 620 240" preserveAspectRatio="none"></svg>
+    <div class="grid-caption">Linear (grey) · Lagrange / Newton family (red) · Natural cubic spline (green) — same 6 points</div>
+  </div>
+
+  <div class="math-formula">
+    <span class="label">Linear</span>
+    y(x) = yᵢ + (yᵢ₊₁−yᵢ)/(xᵢ₊₁−xᵢ) × (x−xᵢ), &nbsp;&nbsp; x ∈ [xᵢ, xᵢ₊₁]
+  </div>
+  <div class="math-formula">
+    <span class="label">Lagrange</span>
+    L(x) = Σᵢ yᵢ × Πⱼ≠ᵢ (x−xⱼ)/(xᵢ−xⱼ)
+  </div>
+  <div class="math-formula">
+    <span class="label">Newton divided difference</span>
+    P(x) = f[x₀] + f[x₀,x₁](x−x₀) + f[x₀,x₁,x₂](x−x₀)(x−x₁) + …
+  </div>
+  <div class="math-formula">
+    <span class="label">Newton forward difference (equal spacing h, p = (x−x₀)/h)</span>
+    P(x) = y₀ + p·Δy₀ + p(p−1)/2! · Δ²y₀ + p(p−1)(p−2)/3! · Δ³y₀ + …
+  </div>
+  <div class="math-formula">
+    <span class="label">Natural cubic spline (per segment i)</span>
+    Sᵢ(x) = aᵢ + bᵢ(x−xᵢ) + cᵢ(x−xᵢ)² + dᵢ(x−xᵢ)³ &nbsp;&nbsp; [C² continuous, tridiagonal solve]
+  </div>
+
+  <table class="method-table">
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Continuity</th>
+        <th>What you hear</th>
+        <th>Weakness</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="swatch" style="background:#6b6560"></span>Linear</td>
+        <td class="mono">C⁰</td>
+        <td>Straight segments — abrupt turns at each note, mechanical</td>
+        <td>Not smooth; derivative jumps at knots</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:var(--accent)"></span>Lagrange</td>
+        <td class="mono">C∞ on interval</td>
+        <td>Musical with few notes; wild pitch swings with many — Runge's phenomenon is audible</td>
+        <td>Unbounded oscillation between points at high degree</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:var(--accent)"></span>Newton DD</td>
+        <td class="mono">same as Lagrange</td>
+        <td>Identical sound — same polynomial, built incrementally from a divided-difference table</td>
+        <td>Same Runge issues; table display is the pedagogical value</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:var(--accent)"></span>Newton FD/BD</td>
+        <td class="mono">same as Lagrange</td>
+        <td>Identical sound; requires equal spacing between notes</td>
+        <td>Only valid for equally spaced data; auto-detected by the app</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:var(--good)"></span>Cubic Spline</td>
+        <td class="mono">C²</td>
+        <td>Continuous acceleration in pitch — closest to a real musician's portamento</td>
+        <td>Natural boundary condition sets second derivative = 0 at endpoints</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── RUNGE ── -->
+<section id="runge">
+  <p class="eyebrow">Runge's phenomenon</p>
+  <h2>Where the global polynomial breaks</h2>
+  <p>Extend the same Lagrange polynomial slightly past the first and last notes and it swings far outside the played pitch range. Using Chebyshev-spaced nodes (denser near the ends) pulls the oscillation back in — a node placement strategy as important as the method choice itself.</p>
+
+  <div class="math-formula">
+    <span class="label">Chebyshev nodes on [−1, 1] (optimal node placement for Lagrange)</span>
+    xₖ = cos( (2k+1)π / (2n+2) ), &nbsp;&nbsp; k = 0, 1, …, n
+  </div>
+
+  <div class="runge-grid">
+    <div class="runge-card">
+      <svg viewBox="0 0 300 140"><g id="runge-equal"></g></svg>
+      <div class="cap">Equally spaced — visible overshoot past the pitch range</div>
+    </div>
+    <div class="runge-card">
+      <svg viewBox="0 0 300 140"><g id="runge-cheb"></g></svg>
+      <div class="cap">Chebyshev-spaced — overshoot dramatically reduced</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AUDIO ── -->
+<section id="audio">
+  <p class="eyebrow">Audio engine</p>
+  <h2>From curve to instrument</h2>
+  <p>The pitch-time curve doesn't drive a synthesizer — it drives a real recording. Each interpolated value becomes a pitch-shift delta applied to a sampled instrument note via the WebAudioFont <code>slides</code> API.</p>
+
+  <div class="chain">
+    <div class="chain-box">Interpolated pitch curve<span>MIDI values over time</span></div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-box">buildSlides()<span>{when, Δmidi} pairs</span></div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-box">queueWaveTable()<span>playbackRate ramps</span></div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-box">FluidR3_GM sample<span>real instrument, pitch-shifted</span></div>
+  </div>
+
+  <div class="engine-compare">
+    <div class="engine-card bad">
+      <h3>❌ Oscillator engine (audio.ts)</h3>
+      <p>Sine/sawtooth oscillators shaped with ADSR, formants, and unison. Every instrument converges toward the same synthetic tone regardless of tuning. Kept as an offline educational fallback only.</p>
+    </div>
+    <div class="engine-card good">
+      <h3>✓ Sample engine (sampler.ts)</h3>
+      <p>Real FluidR3_GM recordings — piano, violin, flute, sax, guitar, clarinet, synth brass — loaded from the WebAudioFontData CDN. Bow attack, body resonance, and harmonic evolution come from the recording itself, not from ADSR curves.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:1.6rem;">
+    <p class="eyebrow">Two playback modes</p>
+    <table class="stack-table">
+      <tr><td>Play Notes</td><td>Plays each control point as a separate staccato note — one queueWaveTable call per point, sustainOverride forces a crisp short envelope.</td></tr>
+      <tr><td>Play Glide</td><td>Plays a single sustained note that pitch-shifts continuously following the full interpolation curve via the slides array. Uses glideSustain override to hold volume for breath/bowed instruments.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <p class="eyebrow">What's built</p>
+  <h2>Feature set</h2>
+  <div class="features-grid">
+    <div class="feature">
+      <h3>Interactive pitch grid</h3>
+      <p>Drag control points on an SVG canvas; the interpolation curve and Math Panel update in real time.</p>
+    </div>
+    <div class="feature">
+      <h3>5 interpolation methods</h3>
+      <p>Linear · Lagrange · Newton divided difference · Newton forward/backward · Natural cubic spline</p>
+    </div>
+    <div class="feature">
+      <h3>Live Math Panel</h3>
+      <p>Shows the LaTeX formula, computed polynomial coefficients, and the full divided-difference or forward-difference table as you move points.</p>
+    </div>
+    <div class="feature">
+      <h3>7 real instruments</h3>
+      <p>Piano · Guitar · Violin · Saxophone · Flute · Clarinet · Synth Brass — all FluidR3_GM samples.</p>
+    </div>
+    <div class="feature">
+      <h3>Notes + Glide playback</h3>
+      <p>Staccato mode and continuous portamento mode — hear both discrete and continuous interpretations of the same curve.</p>
+    </div>
+    <div class="feature">
+      <h3>Error Analysis panel</h3>
+      <p>Plots interpolation error vs node count n for test functions: sin(x), Runge function 1/(1+25x²), exp(x), and polynomial.</p>
+    </div>
+    <div class="feature">
+      <h3>Runge & Chebyshev comparison</h3>
+      <p>Side-by-side visual of equal-spacing overshoot vs Chebyshev-node reduction for Lagrange interpolation.</p>
+    </div>
+    <div class="feature">
+      <h3>WAV export</h3>
+      <p>Renders the interpolated melody to a downloadable WAV audio file directly in the browser — no server required.</p>
+    </div>
+    <div class="feature">
+      <h3>Onboarding tour</h3>
+      <p>First-visit guided walkthrough highlighting each panel and control with tooltips and step indicators.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── STACK ── -->
+<section id="stack">
+  <p class="eyebrow">Built with</p>
+  <h2>Technology stack</h2>
+  <table class="stack-table">
+    <tr><td>Next.js 14</td><td>App Router — React server components, good for math-heavy rendering</td></tr>
+    <tr><td>TypeScript</td><td>Full type safety on ControlPoint, InterpolationMethod, InstrumentId, and all math data structures</td></tr>
+    <tr><td>Vanilla CSS</td><td>Complete control over the custom pitch-grid layout; no utility-class framework</td></tr>
+    <tr><td>KaTeX</td><td>Server-rendered LaTeX formula display in the live Math Panel</td></tr>
+    <tr><td>Web Audio API</td><td>Precise sample scheduling, playback-rate ramps for pitch shifts, gain automation</td></tr>
+    <tr><td>WebAudioFont</td><td>Lightweight sample player; slides API maps directly to our interpolation output</td></tr>
+    <tr><td>FluidR3_GM</td><td>Industry-standard General MIDI soundfont (128 instruments) served from webaudiofontdata CDN</td></tr>
+    <tr><td>Source Serif 4</td><td>Primary typeface — readable serif for the editorial-style layout</td></tr>
+    <tr><td>JetBrains Mono</td><td>Monospace typeface — formulas, labels, code, metadata</td></tr>
+  </table>
+</section>
+
+<!-- ── ARCHITECTURE ── -->
+<section id="architecture">
+  <p class="eyebrow">Structure</p>
+  <h2>How it's organised</h2>
+  <pre class="tree"><span class="dir">app/</span>
+  layout.tsx          <span class="note">root layout — fonts, header with Present button, footer</span>
+  page.tsx            <span class="note">renders &lt;DemoApp /&gt;</span>
+  globals.css         <span class="note">design tokens, all component styles</span>
+
+<span class="dir">components/</span>
+  DemoApp.tsx         <span class="note">root state — points, method, instrument, playing</span>
+  PitchGrid.tsx       <span class="note">SVG canvas — drag control points, draw interpolation curves</span>
+  MathPanel.tsx       <span class="note">KaTeX formula + live coefficient / difference table display</span>
+  TransportControls.tsx  <span class="note">play/stop, instrument selector, WAV export</span>
+  ErrorAnalysisPanel.tsx <span class="note">error vs n curves for sin, Runge fn, exp, polynomial</span>
+  ChebyshevComparison.tsx <span class="note">equal vs Chebyshev node visual</span>
+  ReferenceSection.tsx   <span class="note">textbook-style method explanations</span>
+  OnboardingTour.tsx     <span class="note">first-visit guided walkthrough</span>
+
+<span class="dir">lib/</span>
+  interpolation.ts    <span class="note">all 5 algorithm implementations + self-checks</span>
+  pitch.ts            <span class="note">MIDI ↔ Hz, note names, grid range constants</span>
+  formulas.ts         <span class="note">method metadata, LaTeX strings, explanation text</span>
+  sampler.ts          <span class="note">WebAudioFont engine — real instrument samples (active)</span>
+  audio.ts            <span class="note">oscillator synth engine — educational reference (inactive)</span>
+  errorAnalysis.ts    <span class="note">error measurement vs ground truth</span>
+  presets.ts          <span class="note">preset control-point configurations</span>
+
+<span class="dir">public/</span>
+  WebAudioFontPlayer.js  <span class="note">local copy of the WebAudioFont player runtime</span>
+  present.html           <span class="note">this document</span></pre>
+</section>
+
+<!-- ── SUMMARY ── -->
+<section id="summary">
+  <p class="eyebrow">Takeaways</p>
+  <h2>What this project shows</h2>
+  <ul class="summary-list">
+    <li>Numerical methods are not abstract — they have real, perceivable consequences when applied to sound.</li>
+    <li>Cubic spline wins both ways: C² continuity mathematically, natural-sounding portamento perceptually.</li>
+    <li>Runge's phenomenon is real and audible — not just a warning in a textbook.</li>
+    <li>Node spacing matters as much as method choice: Chebyshev nodes dramatically reduce overshoot.</li>
+    <li>MIDI exists because pitch perception is logarithmic: it linearises the perceptual frequency scale.</li>
+    <li>Real samples beat synthesis: instrument identity lives in the recording, not in ADSR curves.</li>
+  </ul>
+</section>
+
+<footer>
+  Interpolation in Music · Ghanshyam Ghimire · BTech AI, 4th Semester · Kathmandu University<br>
+  Course project for Sandesh Thakuri · <a href="https://github.com/ghanshyamghimiregg/Interpolation-in-music" target="_blank">github.com/ghanshyamghimiregg</a>
+</footer>
+
+<script>
+// ── shared curve math ──
+function linearAt(pts, x) {
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (x >= pts[i][0] && x <= pts[i+1][0]) {
+      const [x0,y0]=pts[i], [x1,y1]=pts[i+1];
+      return y0 + (y1-y0)/(x1-x0)*(x-x0);
+    }
+  }
+  return pts[pts.length-1][1];
+}
+function lagrangeAt(pts, x) {
+  let total = 0;
+  for (let i = 0; i < pts.length; i++) {
+    let term = pts[i][1];
+    for (let j = 0; j < pts.length; j++) {
+      if (j !== i) term *= (x - pts[j][0]) / (pts[i][0] - pts[j][0]);
+    }
+    total += term;
+  }
+  return total;
+}
+function naturalSpline(pts) {
+  const n = pts.length - 1;
+  const x = pts.map(p => p[0]), y = pts.map(p => p[1]);
+  const h = []; for (let i = 0; i < n; i++) h.push(x[i+1] - x[i]);
+  const alpha = new Array(n+1).fill(0);
+  for (let i = 1; i < n; i++)
+    alpha[i] = (3/h[i])*(y[i+1]-y[i]) - (3/h[i-1])*(y[i]-y[i-1]);
+  const l=new Array(n+1).fill(1), mu=new Array(n+1).fill(0), z=new Array(n+1).fill(0);
+  for (let i = 1; i < n; i++) {
+    l[i]  = 2*(x[i+1]-x[i-1]) - h[i-1]*mu[i-1];
+    mu[i] = h[i]/l[i];
+    z[i]  = (alpha[i] - h[i-1]*z[i-1]) / l[i];
+  }
+  const c=new Array(n+1).fill(0), b=new Array(n).fill(0), d=new Array(n).fill(0);
+  for (let j = n-1; j >= 0; j--) {
+    c[j] = z[j] - mu[j]*c[j+1];
+    b[j] = (y[j+1]-y[j])/h[j] - h[j]*(c[j+1]+2*c[j])/3;
+    d[j] = (c[j+1]-c[j])/(3*h[j]);
+  }
+  return function(xx) {
+    let i = n - 1;
+    for (let k = 0; k < n; k++) { if (xx >= x[k] && xx <= x[k+1]) { i = k; break; } }
+    const dx = xx - x[i];
+    return y[i] + b[i]*dx + c[i]*dx*dx + d[i]*dx*dx*dx;
+  };
+}
+function samplePath(fn, xMin, xMax, steps, xToPx, yToPx) {
+  let d = "";
+  for (let s = 0; s <= steps; s++) {
+    const x = xMin + (xMax - xMin) * s / steps;
+    const y = fn(x);
+    d += (s === 0 ? "M" : "L") + xToPx(x).toFixed(1) + "," + yToPx(y).toFixed(1) + " ";
+  }
+  return d;
+}
+
+// shared 6 control points (x: 0..5, y: 0..10)
+const PTS = [[0,3],[1,7],[2,2],[3,8],[4,4],[5,6]];
+const splineFn = naturalSpline(PTS);
+
+function makeMappers(w, h, pad) {
+  return {
+    xToPx: x => pad + x * (w - 2*pad) / 5,
+    yToPx: y => (h - pad) - y * ((h - 2*pad) / 10)
+  };
+}
+
+function buildRoll(svgEl, w, h) {
+  const ns = "http://www.w3.org/2000/svg";
+  const pad = 30;
+  const {xToPx, yToPx} = makeMappers(w, h, pad);
+
+  // gridlines
+  for (let r = 0; r <= 10; r++) {
+    const line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", pad); line.setAttribute("x2", w - pad);
+    line.setAttribute("y1", yToPx(r)); line.setAttribute("y2", yToPx(r));
+    line.setAttribute("class", "gridline");
+    svgEl.appendChild(line);
+  }
+  for (let c = 0; c <= 5; c++) {
+    const line = document.createElementNS(ns, "line");
+    line.setAttribute("y1", pad); line.setAttribute("y2", h - pad);
+    line.setAttribute("x1", xToPx(c)); line.setAttribute("x2", xToPx(c));
+    line.setAttribute("class", "gridline");
+    svgEl.appendChild(line);
+  }
+
+  // curves
+  const defs = [
+    { id:"linear", color:"#6b6560", fn: x => linearAt(PTS, x) },
+    { id:"poly",   color:"#b8432a", fn: x => lagrangeAt(PTS, x) },
+    { id:"spline", color:"#3a6650", fn: splineFn },
+  ];
+  const paths = {};
+  defs.forEach(def => {
+    const p = document.createElementNS(ns, "path");
+    p.setAttribute("class", "curve");
+    p.setAttribute("stroke", def.color);
+    p.setAttribute("d", samplePath(def.fn, 0, 5, 180, xToPx, yToPx));
+    svgEl.appendChild(p);
+    paths[def.id] = p;
+  });
+
+  // control points on top
+  PTS.forEach(([x, y]) => {
+    const c = document.createElementNS(ns, "circle");
+    c.setAttribute("cx", xToPx(x)); c.setAttribute("cy", yToPx(y));
+    c.setAttribute("r", 4.5); c.setAttribute("class", "pt");
+    svgEl.appendChild(c);
+  });
+  return paths;
+}
+
+const heroPaths  = buildRoll(document.getElementById("hero-roll"),   620, 260);
+                   buildRoll(document.getElementById("method-roll"),  620, 240);
+
+// ── Tab control ──
+const FORMULA_DATA = {
+  linear: {
+    name: "Piecewise linear",
+    desc: "Connects consecutive points with straight segments. First derivative jumps at every knot — audibly robotic.",
+    code: "y(x) = yᵢ + (yᵢ₊₁−yᵢ)/(xᵢ₊₁−xᵢ) × (x−xᵢ)"
+  },
+  poly: {
+    name: "Lagrange polynomial",
+    desc: "Single polynomial through all points. Musical with few notes but prone to violent pitch oscillations between points (Runge's phenomenon) with many.",
+    code: "L(x) = Σᵢ yᵢ × Πⱼ≠ᵢ (x−xⱼ)/(xᵢ−xⱼ)"
+  },
+  spline: {
+    name: "Natural cubic spline",
+    desc: "Piecewise cubics with C² continuity — continuous pitch acceleration. Closest to a real musician's portamento. Solved as a tridiagonal linear system.",
+    code: "Sᵢ(x) = aᵢ + bᵢ(x−xᵢ) + cᵢ(x−xᵢ)² + dᵢ(x−xᵢ)³"
+  }
+};
+
+function setActiveTab(id) {
+  Object.keys(heroPaths).forEach(k => {
+    heroPaths[k].classList.toggle("dim", k !== id);
+  });
+  document.querySelectorAll("#hero-tabs button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.target === id);
+  });
+  const f = FORMULA_DATA[id];
+  if (f) {
+    document.getElementById("formula-name").textContent = f.name;
+    document.getElementById("formula-desc").textContent = f.desc;
+    document.getElementById("formula-code").textContent = f.code;
+  }
+}
+
+document.querySelectorAll("#hero-tabs button").forEach(btn => {
+  btn.addEventListener("click", () => setActiveTab(btn.dataset.target));
+});
+setActiveTab("spline");
+
+// ── Runge / Chebyshev illustrations ──
+function drawRungeCard(gId, pts, lineColor) {
+  const g = document.getElementById(gId);
+  const ns = "http://www.w3.org/2000/svg";
+  const n = pts.length - 1;
+  const fn = x => lagrangeAt(pts, x);
+  const toPx = x => 20 + (x / n) * 260;
+  const toPy = y => 115 - y * 12;
+
+  const axis = document.createElementNS(ns, "line");
+  axis.setAttribute("x1", 10); axis.setAttribute("x2", 290);
+  axis.setAttribute("y1", 115); axis.setAttribute("y2", 115);
+  axis.setAttribute("stroke", "#d4cfc4"); axis.setAttribute("stroke-width", "1");
+  g.appendChild(axis);
+
+  const path = document.createElementNS(ns, "path");
+  path.setAttribute("class", "curve");
+  path.setAttribute("stroke", lineColor);
+  path.setAttribute("d", samplePath(fn, -0.2, n + 0.2, 140, x => 20 + (x / n) * 260, toPy));
+  g.appendChild(path);
+
+  pts.forEach(p => {
+    const c = document.createElementNS(ns, "circle");
+    c.setAttribute("cx", toPx(p[0])); c.setAttribute("cy", toPy(p[1]));
+    c.setAttribute("r", 3.5); c.setAttribute("class", "pt");
+    g.appendChild(c);
+  });
+}
+
+drawRungeCard("runge-equal", [[0,1],[1,6],[2,2],[3,7]], "#b8432a");
+drawRungeCard("runge-cheb",  [[0,2],[1,5],[2,3],[3,6]], "#3a6650");
+</script>
+</body>
+</html>
