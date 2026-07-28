@@ -306,7 +306,7 @@ export default function OnboardingTour({ steps, active, onFinish, onStepChange }
           <div className="tour-progress-fill" style={{ width: `${progress}%` }} />
         </div>
         <h3 className="tour-title">{current.title}</h3>
-        <div className="tour-body">{current.body}</div>
+        <div className="tour-body" dangerouslySetInnerHTML={{ __html: current.body }} />
         <div className="tour-foot">
           <button
             type="button"
