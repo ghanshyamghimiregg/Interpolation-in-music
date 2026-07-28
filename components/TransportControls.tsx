@@ -1,6 +1,6 @@
 'use client';
 
-import { playGlide, playStaccato, stopAll, exportWav } from '@/lib/audio';
+import { exportWav, playCompare, type CompareSegment } from '@/lib/audio';
 import type { ControlPoint } from '@/lib/interpolation';
 
 interface TransportControlsProps {
@@ -8,9 +8,12 @@ interface TransportControlsProps {
   curveTimes: number[];
   curveFreqs: number[];
   playing: boolean;
+  compareLabel: string | null;
+  compareSegments: CompareSegment[];
   onPlayGlide: () => void;
   onPlayStaccato: () => void;
   onStop: () => void;
+  onCompare: () => void;
 }
 
 function PlayIcon() {
@@ -34,11 +37,15 @@ export default function TransportControls({
   curveTimes,
   curveFreqs,
   playing,
+  compareLabel,
+  compareSegments,
   onPlayGlide,
   onPlayStaccato,
   onStop,
+  onCompare,
 }: TransportControlsProps) {
   const canPlay = points.length >= 2 && curveTimes.length > 1;
+  const canCompare = compareSegments.length >= 2 && points.length >= 2;
 
   const handleExport = () => {
     const blob = exportWav(curveTimes, curveFreqs);
@@ -51,26 +58,33 @@ export default function TransportControls({
   };
 
   return (
-    <div className="transport">
-      <button
-        type="button"
-        className="transport-btn primary"
-        disabled={!canPlay}
-        onClick={playing ? onStop : onPlayGlide}
-        title="Space"
-      >
-        {playing ? <StopIcon /> : <PlayIcon />}
-        {playing ? 'Stop glide' : 'Play glide'}
-      </button>
-      <button type="button" className="transport-btn" disabled={points.length < 1} onClick={onPlayStaccato}>
-        <PlayIcon />
-        Notes only
-      </button>
-      <button type="button" className="transport-btn" disabled={!canPlay} onClick={handleExport}>
-        Export .wav
-      </button>
+    <div className="transport-wrap">
+      {compareLabel && <p className="compare-label">Playing: {compareLabel}</p>}
+      <div className="transport">
+        <button
+          type="button"
+          className="transport-btn primary"
+          disabled={!canPlay}
+          onClick={playing ? onStop : onPlayGlide}
+          title="Space"
+        >
+          {playing ? <StopIcon /> : <PlayIcon />}
+          {playing ? 'Stop glide' : 'Play glide'}
+        </button>
+        <button type="button" className="transport-btn" disabled={points.length < 1} onClick={onPlayStaccato}>
+          <PlayIcon />
+          Notes only
+        </button>
+        <button type="button" className="transport-btn" disabled={!canCompare || playing} onClick={onCompare}>
+          <PlayIcon />
+          Compare A/B
+        </button>
+        <button type="button" className="transport-btn" disabled={!canPlay} onClick={handleExport}>
+          Export .wav
+        </button>
+      </div>
     </div>
   );
 }
 
-export { playGlide, playStaccato, stopAll };
+export { playCompare };

@@ -159,3 +159,33 @@ function writeString(view: DataView, offset: number, str: string): void {
     view.setUint8(offset + i, str.charCodeAt(i));
   }
 }
+
+export interface CompareSegment {
+  label: string;
+  times: number[];
+  freqs: number[];
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Play methods back-to-back with gap; calls onSegmentChange for UI label */
+export async function playCompare(
+  segments: CompareSegment[],
+  gapSec = 0.5,
+  onSegmentChange?: (label: string | null) => void,
+  onEnd?: () => void
+): Promise<void> {
+  stopAll();
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    onSegmentChange?.(seg.label);
+    await new Promise<void>((resolve) => {
+      playGlide({ times: seg.times, freqs: seg.freqs, onEnd: resolve });
+    });
+    if (i < segments.length - 1) await sleep(gapSec * 1000);
+  }
+  onSegmentChange?.(null);
+  onEnd?.();
+}

@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Source_Serif_4, JetBrains_Mono } from 'next/font/google';
 import 'katex/dist/katex.min.css';
 import './globals.css';
-import DemoApp from '@/components/DemoApp';
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],

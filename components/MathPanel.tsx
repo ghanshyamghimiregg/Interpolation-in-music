@@ -1,13 +1,14 @@
 'use client';
 
 import KatexBlock from './KatexBlock';
+import DividedDifferenceTable from './DividedDifferenceTable';
 import {
   METHODS,
   buildSubstitutedFormula,
   pointSummary,
   isNewtonForwardAvailable,
 } from '@/lib/formulas';
-import type { ControlPoint, InterpolationMethod } from '@/lib/interpolation';
+import type { ControlPoint, DividedDifferenceResult, InterpolationMethod } from '@/lib/interpolation';
 
 interface MathPanelProps {
   method: InterpolationMethod;
@@ -20,6 +21,13 @@ export default function MathPanel({ method, points, meta, rungeWarning }: MathPa
   const info = METHODS.find((m) => m.id === method)!;
   const substituted = buildSubstitutedFormula(method, points, meta);
   const forwardAvail = method === 'newton-forward' ? isNewtonForwardAvailable(points) : true;
+
+  const divided =
+    method === 'newton-divided'
+      ? (meta?.divided as DividedDifferenceResult | undefined)
+      : method === 'newton-forward' && meta?.divided
+        ? (meta.divided as DividedDifferenceResult)
+        : undefined;
 
   return (
     <aside className="math-panel">
@@ -42,6 +50,10 @@ export default function MathPanel({ method, points, meta, rungeWarning }: MathPa
           <p className="placeholder">Add at least 2 control points.</p>
         )}
       </div>
+
+      {(method === 'newton-divided' || (method === 'newton-forward' && divided)) && divided && (
+        <DividedDifferenceTable divided={divided} />
+      )}
 
       {method === 'newton-forward' && points.length >= 2 && (
         <p className={`spacing-note ${forwardAvail ? 'ok' : 'warn'}`}>
