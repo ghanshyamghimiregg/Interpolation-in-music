@@ -21,8 +21,10 @@ import {
   playGlide,
   playStaccato,
   stopAll,
+  exportWav,
+  type CompareSegment,
   type InstrumentId,
-} from '@/lib/audio';
+} from '@/lib/sampler';
 import {
   buildEvalGrid,
   detectRungeOvershoot,

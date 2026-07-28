@@ -1,6 +1,6 @@
 'use client';
 
-import { exportWav, type CompareSegment, type InstrumentId } from '@/lib/audio';
+import { exportWav, type CompareSegment, type InstrumentId } from '@/lib/sampler';
 import type { ControlPoint } from '@/lib/interpolation';
 
 interface TransportControlsProps {

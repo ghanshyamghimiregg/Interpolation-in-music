@@ -12,7 +12,9 @@
     "katex": "^0.16.11",
     "next": "^14.2.18",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "webaudiofont": "^3.0.4",
+    "webaudiofont-ts-patched": "^3.0.407"
   },
   "devDependencies": {
     "@types/katex": "^0.16.7",

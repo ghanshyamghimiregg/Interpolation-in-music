@@ -48,6 +48,12 @@ export type InstrumentId =
   | 'clarinet'
   | 'synth-brass';
 
+export interface InstrumentFormant {
+  freqHz: number;
+  gain: number;   // 0..1 relative mix in the formant bus
+  q: number;      // resonance Q
+}
+
 export interface InstrumentPreset {
   id: InstrumentId;
   label: string;
@@ -82,6 +88,26 @@ export interface InstrumentPreset {
   glideSustain?: number;
   glideRelease?: number;
   glideFilterHz?: number;
+
+  // --- Realism extensions ---
+  // Stretch tuning: cents of sharpness per octave away from A4 (MIDI 69).
+  // Positive = stretched (typical piano), negative = compressed.
+  stretchCentsPerOctave?: number;
+  // Unison: number of slightly-detuned copies per partial. Creates chorus/thickness.
+  unisonCount?: number;       // 1 (default) to 3
+  unisonDetuneCents?: number; // max spread between copies (3-8 typical)
+  // Pitch droop during release: slight flattening as note dies (cents).
+  pitchDroopCents?: number;   // 0 to -12 typical (negative = flatten)
+  pitchDroopWindow?: number;  // seconds over final release to apply droop
+  // Body formants: parallel band-pass filters that resonate at fixed frequencies,
+  // simulating violin body, piano soundboard, sax bell, clarinet bore, etc.
+  formants?: InstrumentFormant[];
+  // Release noise: triggered at key-off — dampers, key click, bow lift, tonehole thunk.
+  releaseNoise?: InstrumentNoise;
+  // Pluck/hammer attack click: short highpass noise burst at note-onset.
+  // Applies after main envelope 0..attack window. Typical piano/guitar.
+  hammerClickGain?: number;   // 0..0.2
+  hammerClickHz?: number;     // highpass cutoff, 2000..8000
 }
 
 // ----------------------------------------------------------------------
@@ -98,10 +124,11 @@ const PIANO: InstrumentPreset = {
     { ratio: 5, gain: 0.08, detune: -2 },
     { ratio: 6, gain: 0.05, detune: +3 },
   ],
+  // Piano: instant attack, fast decay, low sustain (damper stops string) — natural piano character
   attack: 0.003,
-  decay: 0.22,
-  sustain: 0.28,
-  release: 0.32,
+  decay: 0.20,
+  sustain: 0.12,
+  release: 0.22,
   peakGain: 0.3,
   filterType: 'lowpass',
   filterHz: 6200,
@@ -110,6 +137,25 @@ const PIANO: InstrumentPreset = {
   filterKeyTrackPerMidi: 45,
   velToGain: (v) => 0.55 + 0.55 * v,
   velToBrightness: (v) => 0.55 + 0.45 * v,
+  stretchCentsPerOctave: 2.2,
+  unisonCount: 3,
+  unisonDetuneCents: 5,
+  pitchDroopCents: -8,
+  pitchDroopWindow: 0.11,
+  formants: [
+    { freqHz: 120, gain: 0.18, q: 2.2 },
+    { freqHz: 300, gain: 0.14, q: 1.8 },
+    { freqHz: 1250, gain: 0.08, q: 1.4 },
+  ],
+  releaseNoise: {
+    gain: 0.09,
+    highpassHz: 900,
+    attack: 0.002,
+    decay: 0.09,
+    sustain: 0.0,
+  },
+  hammerClickGain: 0.1,
+  hammerClickHz: 4200,
 };
 
 // ----------------------------------------------------------------------
@@ -128,10 +174,11 @@ const GUITAR: InstrumentPreset = {
     { ratio: 6, gain: 0.08, detune: -1 },
     { ratio: 7, gain: 0.04, detune: +2 },
   ],
+  // Guitar: fast pluck attack, medium decay, moderate sustain (string rings but dampens)
   attack: 0.004,
-  decay: 0.32,
-  sustain: 0.42,
-  release: 0.38,
+  decay: 0.28,
+  sustain: 0.35,
+  release: 0.30,
   peakGain: 0.3,
   filterType: 'lowpass',
   filterHz: 4800,
@@ -147,6 +194,25 @@ const GUITAR: InstrumentPreset = {
     decay: 0.04,
     sustain: 0.0,
   },
+  stretchCentsPerOctave: 1.0,
+  unisonCount: 2,
+  unisonDetuneCents: 6,
+  pitchDroopCents: -6,
+  pitchDroopWindow: 0.1,
+  formants: [
+    { freqHz: 100, gain: 0.14, q: 2.0 },
+    { freqHz: 250, gain: 0.12, q: 1.6 },
+    { freqHz: 820, gain: 0.09, q: 1.4 },
+  ],
+  releaseNoise: {
+    gain: 0.05,
+    highpassHz: 1400,
+    attack: 0.003,
+    decay: 0.07,
+    sustain: 0.0,
+  },
+  hammerClickGain: 0.07,
+  hammerClickHz: 5500,
 };
 
 // ----------------------------------------------------------------------
@@ -165,10 +231,11 @@ const VIOLIN: InstrumentPreset = {
     { ratio: 6, gain: 0.12, detune: -2 },
     { ratio: 7, gain: 0.18, detune: +2 },
   ],
+  // Violin: slow bow-pressure attack, high sustain (bow continuously drives string), short release
   attack: 0.09,
-  decay: 0.18,
-  sustain: 0.78,
-  release: 0.22,
+  decay: 0.10,
+  sustain: 0.80,
+  release: 0.18,
   peakGain: 0.26,
   filterType: 'bandpass',
   filterHz: 2400,
@@ -188,7 +255,25 @@ const VIOLIN: InstrumentPreset = {
     sustain: 0.015,
   },
   glideAttack: 0.1,
-  glideSustain: 0.82,
+  glideSustain: 0.85,   // bowed string: hold fully at volume during glide
+  glideRelease: 0.20,
+  stretchCentsPerOctave: 0,
+  unisonCount: 2,
+  unisonDetuneCents: 4.5,
+  pitchDroopCents: -4,
+  pitchDroopWindow: 0.12,
+  formants: [
+    { freqHz: 280, gain: 0.16, q: 2.4 },
+    { freqHz: 520, gain: 0.12, q: 2.0 },
+    { freqHz: 2200, gain: 0.1, q: 1.8 },
+  ],
+  releaseNoise: {
+    gain: 0.045,
+    highpassHz: 1800,
+    attack: 0.003,
+    decay: 0.06,
+    sustain: 0.0,
+  },
 };
 
 // ----------------------------------------------------------------------
@@ -206,10 +291,11 @@ const SAX: InstrumentPreset = {
     { ratio: 5, gain: 0.18, detune: -2 },
     { ratio: 6, gain: 0.08, detune: +1 },
   ],
-  attack: 0.07,
-  decay: 0.12,
-  sustain: 0.78,
-  release: 0.16,
+  // Saxophone: reed attack, very high sustain (constant breath pressure), quick stop
+  attack: 0.06,
+  decay: 0.08,
+  sustain: 0.82,
+  release: 0.15,
   peakGain: 0.26,
   filterType: 'bandpass',
   filterHz: 1800,
@@ -230,6 +316,26 @@ const SAX: InstrumentPreset = {
     decay: 0.05,
     sustain: 0.03,
   },
+  glideSustain: 0.88,   // saxophone: breath sustains fully during glide
+  glideRelease: 0.15,
+  stretchCentsPerOctave: 0,
+  unisonCount: 1,
+  pitchDroopCents: -10,
+  pitchDroopWindow: 0.09,
+  formants: [
+    { freqHz: 220, gain: 0.15, q: 2.2 },
+    { freqHz: 820, gain: 0.12, q: 2.0 },
+    { freqHz: 1500, gain: 0.09, q: 1.6 },
+  ],
+  releaseNoise: {
+    gain: 0.06,
+    highpassHz: 1600,
+    bandpassHz: 3000,
+    q: 1.0,
+    attack: 0.002,
+    decay: 0.05,
+    sustain: 0.0,
+  },
 };
 
 // ----------------------------------------------------------------------
@@ -245,10 +351,11 @@ const FLUTE: InstrumentPreset = {
     { ratio: 3, gain: 0.06, detune: +1 },
     { ratio: 4, gain: 0.025, detune: -1 },
   ],
-  attack: 0.12,
-  decay: 0.1,
+  // Flute: slow breathy onset, very high sustain (continuous breath), gentle fade
+  attack: 0.14,
+  decay: 0.06,
   sustain: 0.88,
-  release: 0.22,
+  release: 0.18,
   peakGain: 0.28,
   filterType: 'lowpass',
   filterHz: 3800,
@@ -266,6 +373,23 @@ const FLUTE: InstrumentPreset = {
     attack: 0.04,
     decay: 0.15,
     sustain: 0.02,
+  },
+  glideSustain: 0.90,   // flute: breath sustains fully during glide
+  glideRelease: 0.20,
+  stretchCentsPerOctave: 0,
+  unisonCount: 1,
+  pitchDroopCents: -6,
+  pitchDroopWindow: 0.1,
+  formants: [
+    { freqHz: 450, gain: 0.1, q: 1.8 },
+    { freqHz: 1600, gain: 0.07, q: 1.6 },
+  ],
+  releaseNoise: {
+    gain: 0.04,
+    highpassHz: 2200,
+    attack: 0.002,
+    decay: 0.06,
+    sustain: 0.0,
   },
 };
 
@@ -285,10 +409,11 @@ const CLARINET: InstrumentPreset = {
     { ratio: 4, gain: 0.08, detune: -1 },
     { ratio: 9, gain: 0.1, detune: +1 },
   ],
+  // Clarinet: reed onset, very high sustain (continuous reed vibration), abrupt stop
   attack: 0.05,
-  decay: 0.1,
-  sustain: 0.8,
-  release: 0.18,
+  decay: 0.08,
+  sustain: 0.82,
+  release: 0.14,
   peakGain: 0.28,
   filterType: 'bandpass',
   filterHz: 1500,
@@ -307,6 +432,23 @@ const CLARINET: InstrumentPreset = {
     decay: 0.04,
     sustain: 0.01,
   },
+  glideSustain: 0.88,   // clarinet: reed sustains fully during glide
+  glideRelease: 0.16,
+  stretchCentsPerOctave: 0,
+  unisonCount: 1,
+  pitchDroopCents: -8,
+  pitchDroopWindow: 0.1,
+  formants: [
+    { freqHz: 140, gain: 0.13, q: 2.0 },
+    { freqHz: 1100, gain: 0.1, q: 2.4 },
+  ],
+  releaseNoise: {
+    gain: 0.05,
+    highpassHz: 1500,
+    attack: 0.003,
+    decay: 0.07,
+    sustain: 0.0,
+  },
 };
 
 // ----------------------------------------------------------------------
@@ -323,10 +465,11 @@ const SYNTH_BRASS: InstrumentPreset = {
     { ratio: 4, gain: 0.25, detune: +2 },
     { ratio: 5, gain: 0.12, detune: -1 },
   ],
+  // Synth Brass: punchy attack with filter sweep, sustained pad tone, moderate release
   attack: 0.04,
-  decay: 0.14,
-  sustain: 0.65,
-  release: 0.2,
+  decay: 0.12,
+  sustain: 0.70,
+  release: 0.20,
   peakGain: 0.28,
   filterType: 'lowpass',
   filterHz: 3200,
@@ -338,6 +481,17 @@ const SYNTH_BRASS: InstrumentPreset = {
   vibratoHz: 4.8,
   vibratoCents: 6,
   vibratoDelay: 0.2,
+  glideSustain: 0.75,   // synth brass: full pad sustain during glide
+  glideRelease: 0.22,
+  stretchCentsPerOctave: 0,
+  unisonCount: 2,
+  unisonDetuneCents: 7,
+  pitchDroopCents: -3,
+  pitchDroopWindow: 0.1,
+  formants: [
+    { freqHz: 180, gain: 0.1, q: 1.8 },
+    { freqHz: 700, gain: 0.08, q: 1.6 },
+  ],
 };
 
 export const INSTRUMENTS: { id: InstrumentId; label: string }[] = [
@@ -389,6 +543,9 @@ interface Voice {
   vibratoLfo?: OscillatorNode;
   vibratoDepth?: GainNode;
   noise?: { source: AudioBufferSourceNode | null; hp: BiquadFilterNode; gain: GainNode };
+  releaseNoise?: { source: AudioBufferSourceNode | null; hp: BiquadFilterNode; gain: GainNode };
+  hammerClick?: { source: AudioBufferSourceNode | null; hp: BiquadFilterNode; gain: GainNode };
+  formantBusses?: { bp: BiquadFilterNode; gain: GainNode }[];
   filter: BiquadFilterNode;
   master: GainNode;
 }
@@ -415,6 +572,14 @@ function createVoice(ctx: AudioContext, opts: CreateVoiceOptions): Voice {
   const gainMul = instrument.velToGain(velocity);
   const brightness = instrument.velToBrightness(velocity);
 
+  // Stretch tuning: deviation from A4 (MIDI 69) gives cents offset.
+  const stretchPerOct = instrument.stretchCentsPerOctave ?? 0;
+  const stretchCents = stretchPerOct !== 0 ? ((midi - 69) / 12) * stretchPerOct : 0;
+
+  // Unison: how many copies per partial, spread across the detune range.
+  const unisonCount = Math.max(1, Math.min(3, instrument.unisonCount ?? 1));
+  const unisonDetune = instrument.unisonDetuneCents ?? 0;
+
   const partials: Voice['partials'] = [];
   const partialsBus = ctx.createGain();
   partialsBus.gain.value = 1;
@@ -428,27 +593,42 @@ function createVoice(ctx: AudioContext, opts: CreateVoiceOptions): Voice {
   for (let i = 0; i < instrument.partials.length; i++) {
     const p = instrument.partials[i];
     const velRoll = Math.max(0.15, 1 - i * (1 - velocity) * 0.14);
-    const level = p.gain * brightness * velRoll;
+    const baseLevel = p.gain * brightness * velRoll;
 
-    const g = ctx.createGain();
-    g.gain.value = level;
+    for (let u = 0; u < unisonCount; u++) {
+      // Spread unison copies across [-unisonDetune/2, +unisonDetune/2]
+      const unisonSpread = unisonCount > 1
+        ? ((u / (unisonCount - 1)) - 0.5) * unisonDetune
+        : 0;
+      const level = baseLevel / Math.sqrt(unisonCount);
 
-    const osc = ctx.createOscillator();
-    osc.type = p.type ?? 'sine';
-    osc.frequency.value = Math.max(20, freq * p.ratio);
-    if (p.detune !== 0) osc.detune.value = p.detune;
+      const g = ctx.createGain();
+      g.gain.value = level;
 
-    osc.connect(g);
-    g.connect(partialsBus);
-    partials.push({ osc, gain: g, baseRatio: p.ratio, baseDetuneCents: p.detune });
-    activeCount++;
-    osc.onended = tryCallEnded;
+      const osc = ctx.createOscillator();
+      osc.type = p.type ?? 'sine';
+      osc.frequency.value = Math.max(20, freq * p.ratio);
+      // Apply: preset partial detune + stretch tuning + unison spread
+      osc.detune.value = p.detune + stretchCents + unisonSpread;
+
+      osc.connect(g);
+      g.connect(partialsBus);
+      partials.push({ osc, gain: g, baseRatio: p.ratio, baseDetuneCents: p.detune });
+      activeCount++;
+      osc.onended = tryCallEnded;
+    }
   }
 
   const filter = ctx.createBiquadFilter();
   filter.type = instrument.filterType;
   filter.Q.value = instrument.filterQ ?? 0.8;
   filter.frequency.value = Math.max(60, Math.min(18000, filterHz));
+
+  // Formant busses: parallel band-pass filters feeding master with fixed resonant peaks
+  let formantBusses: Voice['formantBusses'] | undefined;
+  if (instrument.formants && instrument.formants.length > 0) {
+    formantBusses = [];
+  }
 
   const master = ctx.createGain();
   master.gain.value = 0;
@@ -471,49 +651,7 @@ function createVoice(ctx: AudioContext, opts: CreateVoiceOptions): Voice {
     vibratoLfo.stop(startTime + (opts.lengthSec ?? 2) + 0.1);
   }
 
-  // Optional noise bus (pick attack, breath, bow scratch)
-  let noise: Voice['noise'] | undefined;
-  if (instrument.noise) {
-    const n = instrument.noise;
-    const hp = ctx.createBiquadFilter();
-    if (n.bandpassHz) {
-      hp.type = 'bandpass';
-      hp.frequency.value = n.bandpassHz;
-      hp.Q.value = n.q ?? 1;
-    } else {
-      hp.type = 'highpass';
-      hp.frequency.value = n.highpassHz;
-      hp.Q.value = 0.7;
-    }
-    const ng = ctx.createGain();
-    ng.gain.value = 0;
-    const nAttack = n.attack;
-    const nDecay = n.decay;
-    const nSustain = n.sustain;
-    ng.gain.setValueAtTime(0, startTime);
-    ng.gain.linearRampToValueAtTime(n.gain, startTime + nAttack);
-    ng.gain.linearRampToValueAtTime(Math.max(0, n.gain * nSustain), startTime + nAttack + nDecay);
-    if (opts.lengthSec) {
-      const tR = startTime + Math.max(0, opts.lengthSec - release);
-      ng.gain.setValueAtTime(Math.max(0, n.gain * nSustain), tR);
-      ng.gain.linearRampToValueAtTime(0, tR + release);
-    }
-    const buf = buildBufferNoise(ctx, Math.max(1.2, (opts.lengthSec ?? 1.5) + 0.4));
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    src.connect(hp);
-    hp.connect(ng);
-    ng.connect(partialsBus);
-    src.start(startTime);
-    src.stop(startTime + (opts.lengthSec ?? 1.5) + 0.1);
-    noise = { source: src, hp, gain: ng };
-  }
-
-  partialsBus.connect(filter);
-  filter.connect(master);
-
-  // ADSR on master gain
+  // ADSR on master gain + pitch-droop window calculation (done before scheduling)
   const totalLen = opts.lengthSec ?? (attack + decay + 0.2);
   const t0 = startTime;
   const tAttack = t0 + attack;
@@ -522,6 +660,44 @@ function createVoice(ctx: AudioContext, opts: CreateVoiceOptions): Voice {
   const tEnd = tRelease + release;
   const peak = instrument.peakGain * gainMul;
 
+  // Pitch droop: ramp cents flat during the final droop window of release
+  const droopCents = instrument.pitchDroopCents ?? 0;
+  const droopWindow = Math.min(release, instrument.pitchDroopWindow ?? Math.min(0.12, release));
+  const tDroopStart = Math.max(tRelease, tEnd - droopWindow);
+  if (droopCents !== 0 && partials.length > 0) {
+    for (const { osc } of partials) {
+      osc.detune.setValueAtTime(osc.detune.value, tDroopStart);
+      osc.detune.linearRampToValueAtTime(osc.detune.value + droopCents, tEnd);
+    }
+  }
+
+  // Optional noise bus (pick attack, breath, bow scratch)
+  let noise: Voice['noise'] | undefined;
+  let hammerClick: Voice['hammerClick'] | undefined;
+  let releaseNoise: Voice['releaseNoise'] | undefined;
+
+  partialsBus.connect(filter);
+
+  // Build formant parallel busses: each taps the filter output, applies band-pass
+  // at fixed freq, then sums into master.
+  if (formantBusses && instrument.formants) {
+    for (const fDef of instrument.formants) {
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = Math.max(40, Math.min(16000, fDef.freqHz));
+      bp.Q.value = Math.max(0.5, fDef.q);
+      const fg = ctx.createGain();
+      fg.gain.value = Math.max(0, Math.min(1, fDef.gain));
+      filter.connect(bp);
+      bp.connect(fg);
+      fg.connect(master);
+      formantBusses.push({ bp, gain: fg });
+    }
+  }
+
+  filter.connect(master);
+
+  // ADSR on master gain
   master.gain.setValueAtTime(0, t0);
   if (attack > 0) {
     master.gain.linearRampToValueAtTime(peak, tAttack);
@@ -537,10 +713,10 @@ function createVoice(ctx: AudioContext, opts: CreateVoiceOptions): Voice {
     osc.stop(tEnd + 0.02);
   }
 
-  return { partials, vibratoLfo, vibratoDepth, noise, filter, master };
+  return { partials, vibratoLfo, vibratoDepth, noise, releaseNoise, hammerClick, formantBusses, filter, master };
 }
 
-/** Shift all partials' frequencies in lock-step over a glide. */
+/** Shift all partials' frequencies in lock-step over a glide using linear pitch ramps. */
 function scheduleVoiceGlide(
   voice: Voice,
   times: number[],
@@ -551,16 +727,15 @@ function scheduleVoiceGlide(
 ): void {
   for (const p of voice.partials) {
     const { osc, baseRatio, baseDetuneCents } = p;
-    osc.frequency.setValueAtTime(Math.max(20, freqs[0] * baseRatio), baseT);
-    // Detune is already applied via .detune on the osc; no extra offset here.
-    // Leave baseDetuneCents referenced so it isn't pruned by tree-shakers.
+    const startF = Math.max(20, Math.min(12000, freqs[0] * baseRatio));
+    osc.frequency.cancelScheduledValues(baseT);
+    osc.frequency.setValueAtTime(startF, baseT);
     void baseDetuneCents;
+
     for (let j = step; j < times.length; j += step) {
       const t = baseT + (times[j] - times[0]) / speed;
-      osc.frequency.setValueAtTime(
-        Math.max(20, Math.min(12000, freqs[j] * baseRatio)),
-        t
-      );
+      const targetF = Math.max(20, Math.min(12000, freqs[j] * baseRatio));
+      osc.frequency.linearRampToValueAtTime(targetF, t);
     }
   }
 }
@@ -592,6 +767,7 @@ export async function playGlide({
   const now = ctx.currentTime + 0.05;
   const duration = Math.max(0.1, (times[times.length - 1] - times[0]) / speed);
 
+  // Continuous physical synthesis voice for ALL instruments (including Piano)
   const voice = createVoice(ctx, {
     instrument: preset,
     freq: Math.max(50, freqs[0]),
@@ -607,8 +783,11 @@ export async function playGlide({
   });
   voice.master.connect(ctx.destination);
 
-  const scheduleStep = Math.max(1, Math.floor(times.length / 300));
+  const scheduleStep = Math.max(1, Math.floor(times.length / 150));
   scheduleVoiceGlide(voice, times, freqs, now, speed, scheduleStep);
+
+  const totalMs = (duration + 0.4) * 1000;
+  setTimeout(() => onEnd?.(), totalMs);
 }
 
 export async function playStaccato(
@@ -623,28 +802,46 @@ export async function playStaccato(
 
   const preset = getInstrument(instrument);
   const sorted = [...points].sort((a, b) => a.t - b.t);
-  const noteDur = 0.48 / speed;
-  const ioi = 0.22 / speed;
-  let start = ctx.currentTime + 0.05;
+
+  // Staccato notes: short crisp duration with ~50% gap between notes
+  const noteDur = 0.25 / speed;
+  const minIoi = 0.50 / speed;
+  const baseTime = ctx.currentTime + 0.05;
+
+  const tSpan = sorted.length > 1 ? sorted[sorted.length - 1].t - sorted[0].t : 1;
+  const timeScale = tSpan > 0 ? Math.max(0.65, (sorted.length * minIoi) / tSpan) : minIoi;
+
+  let lastOnset = baseTime - minIoi;
+  let lastEnd = baseTime;
 
   for (let i = 0; i < sorted.length; i++) {
     const p = sorted[i];
     const midi = p.midi;
     const arc = Math.sin((i / Math.max(1, sorted.length - 1)) * Math.PI);
-    const vel = 0.55 + 0.3 * arc + 0.08 * ((i * 31) % 7) / 7;
+    const vel = 0.60 + 0.28 * arc;
+
+    let onset = baseTime + (p.t - sorted[0].t) * timeScale;
+    if (onset < lastOnset + minIoi) {
+      onset = lastOnset + minIoi;
+    }
+    lastOnset = onset;
+
     const voice = createVoice(ctx, {
       instrument: preset,
       freq: midiToHz(midi),
       midiPitch: midi,
-      startTime: start,
+      startTime: onset,
       velocity: Math.max(0.15, Math.min(1, vel)),
       lengthSec: noteDur,
+      // Force short staccato sustain regardless of preset — keeps notes crisp and distinct
+      sustainOverride: 0.10,
+      releaseOverride: 0.12,
     });
     voice.master.connect(ctx.destination);
-    start += ioi;
+    lastEnd = onset + noteDur;
   }
 
-  const totalMs = (start - ctx.currentTime + noteDur + 0.12) * 1000;
+  const totalMs = Math.max(100, (lastEnd - ctx.currentTime + 0.4) * 1000);
   setTimeout(() => onEnd?.(), totalMs);
 }
 
@@ -705,7 +902,6 @@ export function exportWav(
   const releaseN = Math.max(1, Math.floor((preset.glideRelease ?? preset.release) * sampleRate));
   const sustainLevel = preset.glideSustain ?? preset.sustain;
 
-  // Approximate filterHz from average freq of the curve
   let avgF = 0;
   for (let i = 0; i < freqs.length; i++) avgF += freqs[i];
   avgF /= Math.max(1, freqs.length);
@@ -735,30 +931,74 @@ export function exportWav(
     return 0;
   }
 
+  const stretchPerOct = preset.stretchCentsPerOctave ?? 0;
+  const stretchCents = stretchPerOct !== 0 ? ((avgMidi - 69) / 12) * stretchPerOct : 0;
+
+  const unisonCount = Math.max(1, Math.min(3, preset.unisonCount ?? 1));
+  const unisonDetune = preset.unisonDetuneCents ?? 0;
+
   const P = preset.partials.length;
-  const phases = new Float32Array(P);
+  const phases = new Float32Array(P * unisonCount);
   const brightness = preset.velToBrightness(0.85);
   const hasVib = preset.vibratoHz && preset.vibratoCents && preset.vibratoCents > 0;
   const vibAngVel = hasVib ? (2 * Math.PI * (preset.vibratoHz ?? 0)) / sampleRate : 0;
   const vibCents = preset.vibratoCents ?? 0;
   const vibDelayN = (preset.vibratoDelay ?? 0) * sampleRate;
 
-  // Simple single-pole low-pass (LP filter) approximation for filterType=lowpass/bandpass
-  // We apply a two-pole-ish biquad via state variables, matching cutoff loosely.
-  // For offline: this is a cosmetic approximation to match the live feel without
-  // pulling in a full biquad engine.
+  const droopCents = preset.pitchDroopCents ?? 0;
+  const droopWindowS = Math.min(preset.release ?? 0.2, preset.pitchDroopWindow ?? 0.12);
+  const droopStart = Math.max(releaseStart, numSamples - Math.floor(droopWindowS * sampleRate));
+  function droopAt(i: number): number {
+    if (droopCents === 0 || i < droopStart) return 0;
+    const u = numSamples > droopStart ? (i - droopStart) / (numSamples - droopStart) : 0;
+    return droopCents * Math.max(0, Math.min(1, u));
+  }
+
   const f0 = Math.min(filterHz, sampleRate / 3);
   const lpA1 = Math.exp((-2 * Math.PI * f0) / sampleRate);
-  const lpA1Hi = Math.exp((-2 * Math.PI * 1200) / sampleRate); // for band-pass-like HP part
+  const lpA1Hi = Math.exp((-2 * Math.PI * 1200) / sampleRate);
   let lpZ1 = 0;
   let lpZ1Hi = 0;
 
-  // Noise state
+  // Per-formant band-pass states (simple resonator approximation)
+  const formantStates: { z1: number; z2: number; a1: number; a2: number; b0: number; gain: number }[] = [];
+  if (preset.formants) {
+    for (const fDef of preset.formants) {
+      const fr = Math.max(40, Math.min(sampleRate / 3, fDef.freqHz));
+      const q = Math.max(0.5, fDef.q);
+      const omega = (2 * Math.PI * fr) / sampleRate;
+      const alpha = Math.sin(omega) / (2 * q);
+      const cosw = Math.cos(omega);
+      const b0 = alpha;
+      const a1 = -2 * cosw;
+      const a2 = 1 - alpha;
+      const norm = 1 + a1 + a2;
+      formantStates.push({
+        z1: 0, z2: 0,
+        a1: a1 / (1 + a1 + a2),
+        a2: a2 / (1 + a1 + a2),
+        b0: b0 / norm,
+        gain: fDef.gain,
+      });
+    }
+  }
+
   const noiseCfg = preset.noise;
-  let noiseRmsOfs = 0;
-  const noiseRateAtk = 1 / Math.max(1, Math.floor((noiseCfg?.attack ?? 0.01) * sampleRate));
-  const noiseRateDec = 1 / Math.max(1, Math.floor((noiseCfg?.decay ?? 0.05) * sampleRate));
+  let noiseRateAtk = 1 / Math.max(1, Math.floor((noiseCfg?.attack ?? 0.01) * sampleRate));
+  let noiseRateDec = 1 / Math.max(1, Math.floor((noiseCfg?.decay ?? 0.05) * sampleRate));
   let noiseEnv = 0;
+
+  const releaseNoiseCfg = preset.releaseNoise;
+  const relNoiseAtkN = releaseNoiseCfg ? Math.floor(releaseNoiseCfg.attack * sampleRate) : 0;
+  const relNoiseDecN = releaseNoiseCfg ? Math.floor(releaseNoiseCfg.decay * sampleRate) : 0;
+  const relNoiseRateAtk = releaseNoiseCfg ? 1 / Math.max(1, relNoiseAtkN) : 0;
+  const relNoiseRateDec = releaseNoiseCfg ? 1 / Math.max(1, relNoiseDecN) : 0;
+  let relNoiseEnv = 0;
+
+  const hammerGain = preset.hammerClickGain ?? 0;
+  const hammerHz = preset.hammerClickHz ?? 4000;
+  const hammerHpA1 = hammerGain > 0 ? Math.exp((-2 * Math.PI * hammerHz) / sampleRate) : 0;
+  let hammerHpZ1 = 0;
 
   for (let i = 0; i < numSamples; i++) {
     const tSample = t0 + (i / sampleRate);
@@ -768,66 +1008,115 @@ export function exportWav(
     const tB = times[Math.min(idx + 1, times.length - 1)];
     const fA = freqs[idx];
     const fB = freqs[Math.min(idx + 1, freqs.length - 1)];
-    const u = tB > tA ? (tSample - tA) / (tB - tA) : 0;
-    const freq = Math.max(20, fA + u * (fB - fA));
+    const uInterp = tB > tA ? (tSample - tA) / (tB - tA) : 0;
+    const freq = Math.max(20, fA + uInterp * (fB - fA));
     const fNorm = Math.min(1, freq / 1500);
 
-    // Vibrato phase (common across partials)
+    const curMidi = Math.log2(freq / 440) * 12 + 69;
+    const dynamicStretch = stretchPerOct !== 0
+      ? ((curMidi - 69) / 12) * stretchPerOct
+      : stretchCents;
+
     let vibCentsNow = 0;
     if (hasVib) {
       const ramp = Math.max(0, Math.min(1, (i - vibDelayN) / (0.12 * sampleRate + 1)));
       vibCentsNow = Math.sin(i * vibAngVel) * vibCents * ramp;
     }
+    const droopNow = droopAt(i);
 
     let s = 0;
     for (let k = 0; k < P; k++) {
       const p = preset.partials[k];
-      const fk = Math.max(20, Math.min(16000, freq * p.ratio * Math.pow(2, vibCentsNow / 1200)));
       const velRoll = Math.max(0.15, 1 - k * (1 - 0.85) * 0.14);
       const partialLevel = p.gain * brightness * velRoll;
-      const roll = Math.max(0, 1 - (fk * 1.2 - 2000) / 15000) * (1 - 0.25 * fNorm);
-      const amp = partialLevel * Math.max(0, Math.min(1, roll));
-      phases[k] += (2 * Math.PI * fk) / sampleRate;
-      // Synthesize partial waveform. Sine for sine type; for saw/triangle we
-      // approximate with sinusoid + soft clipped harmonic correction.
-      let w = Math.sin(phases[k]);
-      if (p.type === 'sawtooth') {
-        const saw = 2 * ((phases[k] / (2 * Math.PI)) - Math.floor(phases[k] / (2 * Math.PI) + 0.5));
-        w = w * 0.55 + saw * 0.55;
-      } else if (p.type === 'triangle') {
-        const x = phases[k] / (2 * Math.PI);
-        const tri = 4 * Math.abs(x - Math.floor(x + 0.5)) - 1;
-        w = w * 0.5 + tri * 0.7;
+
+      for (let uni = 0; uni < unisonCount; uni++) {
+        const uniSpread = unisonCount > 1
+          ? ((uni / (unisonCount - 1)) - 0.5) * unisonDetune
+          : 0;
+        const totalCents = vibCentsNow + droopNow + p.detune + dynamicStretch + uniSpread;
+        const fk = Math.max(20, Math.min(16000, freq * p.ratio * Math.pow(2, totalCents / 1200)));
+        const roll = Math.max(0, 1 - (fk * 1.2 - 2000) / 15000) * (1 - 0.25 * fNorm);
+        const amp = (partialLevel / Math.sqrt(unisonCount)) * Math.max(0, Math.min(1, roll));
+        const pi = k * unisonCount + uni;
+        phases[pi] += (2 * Math.PI * fk) / sampleRate;
+
+        let w = Math.sin(phases[pi]);
+        if (p.type === 'sawtooth') {
+          const saw = 2 * ((phases[pi] / (2 * Math.PI)) - Math.floor(phases[pi] / (2 * Math.PI) + 0.5));
+          w = w * 0.55 + saw * 0.55;
+        } else if (p.type === 'triangle') {
+          const x = phases[pi] / (2 * Math.PI);
+          const tri = 4 * Math.abs(x - Math.floor(x + 0.5)) - 1;
+          w = w * 0.5 + tri * 0.7;
+        }
+        s += w * amp;
       }
-      s += w * amp;
     }
     s *= 0.48;
 
-    // Mix in noise (pick/breath/bow)
     if (noiseCfg) {
-      // envelope follows attack/decay/sustain style
       const envDurAtk = Math.floor(noiseCfg.attack * sampleRate);
       if (i < envDurAtk) noiseEnv = Math.min(noiseCfg.gain, noiseEnv + noiseCfg.gain * noiseRateAtk);
       else if (noiseEnv > noiseCfg.gain * noiseCfg.sustain) noiseEnv = Math.max(noiseCfg.gain * noiseCfg.sustain, noiseEnv - noiseCfg.gain * noiseRateDec);
+      if (i >= releaseStart) {
+        const uR = (i - releaseStart) / Math.max(1, numSamples - releaseStart);
+        noiseEnv = Math.max(0, noiseEnv * (1 - uR));
+      }
       const n = (Math.random() * 2 - 1);
-      // High-pass-ish: one-pole DC blocker + band-pass-ish shelf around noise center
       const nHi = n - lpZ1Hi;
       lpZ1Hi = lpZ1Hi + (1 - lpA1Hi) * nHi * 0.55;
       s += nHi * noiseEnv * 0.9;
-      void noiseRmsOfs;
     }
 
-    // Final global LP/bandpass: one pole low-pass, and (if bandpass) subtract low-passed version
+    if (hammerGain > 0 && i < attackN + Math.floor(0.05 * sampleRate)) {
+      const hAtkN = Math.max(1, Math.floor(0.001 * sampleRate));
+      const hDecN = Math.max(1, Math.floor((0.001 + (preset.glideAttack ?? preset.attack) * 1.5) * sampleRate));
+      let hEnv = 0;
+      if (i < hAtkN) hEnv = (i / hAtkN) * hammerGain;
+      else if (i < hDecN) {
+        const uu = (i - hAtkN) / Math.max(1, hDecN - hAtkN);
+        hEnv = hammerGain * (1 - uu);
+      }
+      const n = (Math.random() * 2 - 1);
+      const hpHp = n - hammerHpZ1;
+      hammerHpZ1 = hammerHpZ1 + (1 - hammerHpA1) * hpHp;
+      s += hpHp * hEnv;
+    }
+
+    if (releaseNoiseCfg && i >= releaseStart) {
+      const relI = i - releaseStart;
+      if (relI < relNoiseAtkN) {
+        relNoiseEnv = Math.min(releaseNoiseCfg.gain, relNoiseEnv + releaseNoiseCfg.gain * relNoiseRateAtk);
+      } else if (relNoiseEnv > releaseNoiseCfg.gain * releaseNoiseCfg.sustain) {
+        relNoiseEnv = Math.max(releaseNoiseCfg.gain * releaseNoiseCfg.sustain, relNoiseEnv - releaseNoiseCfg.gain * relNoiseRateDec);
+      }
+      if (relNoiseEnv < releaseNoiseCfg.gain * releaseNoiseCfg.sustain * 0.005) relNoiseEnv = 0;
+      const n = (Math.random() * 2 - 1);
+      const nHi = n - lpZ1Hi * 0.6;
+      s += nHi * relNoiseEnv * 0.8;
+    }
+
     const sRaw = s;
     lpZ1 = lpA1 * lpZ1 + (1 - lpA1) * sRaw;
+    let sFiltered;
     if (preset.filterType === 'bandpass') {
-      // Rough band-pass approximation: (raw - lpZ1) attenuates both bass and extreme highs
-      s = (sRaw - lpZ1) * 1.15;
+      sFiltered = (sRaw - lpZ1) * 1.15;
     } else {
-      s = lpZ1;
+      sFiltered = lpZ1;
     }
 
-    buffer[i] = Math.max(-1, Math.min(1, s * env(i)));
+    let sFormants = 0;
+    for (let fi = 0; fi < formantStates.length; fi++) {
+      const fs = formantStates[fi];
+      const outF = fs.b0 * sFiltered - fs.a1 * fs.z1 - fs.a2 * fs.z2;
+      fs.z2 = fs.z1;
+      fs.z1 = outF;
+      sFormants += outF * fs.gain;
+    }
+
+    const final = (sFiltered + sFormants) * env(i);
+    buffer[i] = Math.max(-1, Math.min(1, final));
   }
 
   const wavBuffer = encodeWav(buffer, sampleRate);
