@@ -1,0 +1,376 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --paper: #faf8f4;
+  --paper-dark: #f0ece4;
+  --ink: #1a1814;
+  --ink-muted: #6b6560;
+  --rule: #d4cfc4;
+  --accent: #b8432a;
+  --accent-dim: #e8d5d0;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif), Georgia, serif;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+}
+
+.site-header {
+  border-bottom: 2px solid var(--ink);
+  padding: 1.25rem 1.5rem;
+  background: var(--paper-dark);
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  max-width: 36rem;
+}
+
+.credit-block {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  text-align: right;
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.demo-section {
+  margin-bottom: 3rem;
+}
+
+.presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.presets-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin-right: 0.5rem;
+}
+
+.preset-btn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.preset-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.demo-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .demo-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.demo-main {
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 1rem;
+}
+
+.method-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--rule);
+  margin: -1rem -1rem 1rem;
+  padding: 0 0.5rem;
+}
+
+.method-tab {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.method-tab:hover {
+  color: var(--ink);
+}
+
+.method-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.grid-wrap {
+  margin-bottom: 0.75rem;
+}
+
+.pitch-canvas {
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+  border: 1px solid var(--rule);
+}
+
+.grid-hint {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+}
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+.transport-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--rule);
+  background: var(--paper-dark);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.transport-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.transport-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.transport-btn.primary:disabled {
+  background: var(--rule);
+  border-color: var(--rule);
+  color: var(--ink-muted);
+}
+
+.math-panel {
+  border: 1px solid var(--rule);
+  padding: 1rem;
+  background: var(--paper-dark);
+  font-size: 0.9rem;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.panel-title {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.5rem;
+  color: var(--ink-muted);
+}
+
+.method-name {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.formula-block {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.formula-block.substituted {
+  background: var(--paper);
+  padding: 0.75rem;
+  border: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.formula-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  margin: 0 0 0.5rem;
+}
+
+.formula-block .katex {
+  font-size: 0.85em;
+}
+
+.placeholder {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.spacing-note {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.5rem;
+  margin: 0 0 1rem;
+  border-left: 3px solid var(--rule);
+}
+
+.spacing-note.ok {
+  border-color: #3d6b4f;
+  background: #eef4f0;
+}
+
+.spacing-note.warn {
+  border-color: #a67c00;
+  background: #faf6ea;
+}
+
+.runge-warning {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.5rem;
+  margin: 0 0 1rem;
+  background: var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  color: var(--accent);
+}
+
+.method-notes p {
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.method-notes .weakness {
+  font-size: 0.8rem;
+}
+
+.reference-section {
+  border-top: 2px solid var(--ink);
+  padding-top: 2rem;
+}
+
+.section-heading {
+  font-size: 1.25rem;
+  margin: 0 0 1.25rem;
+}
+
+.reference-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.reference-card {
+  border: 1px solid var(--rule);
+  padding: 0.85rem;
+  background: var(--paper);
+}
+
+.reference-card h3 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.reference-card p {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.reference-card .katex {
+  font-size: 0.65em;
+}
+
+.mini-plot {
+  display: block;
+  margin: 0.25rem 0;
+}
+
+.site-footer {
+  border-top: 1px solid var(--rule);
+  margin-top: 3rem;
+  padding: 1.5rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+.site-footer p {
+  margin: 0;
+}
